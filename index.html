@@ -280,8 +280,7 @@ This data has been preprocessed <a href="https://github.com/smped/PRJNA509779">h
 <p>The two targets in this dataset are the Estrogen Receptor (ER<span class="math inline">\(\alpha\)</span>) and the histone mark H3K27ac.
 Data has been taken from ZR-75-1 cells cultured in Estrogen (E2) or Estrogen + Dihydrotestosterone (E2DHT), and was first published by researchers from the Dame Roma Mitchell Cancer Research Laboratories <span class="citation">(<a href="#ref-Hickey2021-mz">Hickey et al. 2021</a>)</span></p>
 <p>The sample sheet for the ER<span class="math inline">\(\alpha\)</span> samples can be setup by copying the following code.
-As can be seen, we have three samples from the E2 (baseline) group with three more treated by the addition of DHT.
-We’ll also setup colours for each treatment for consistent visualisations throughout the session.</p>
+As can be seen, we have three samples from the E2 (baseline) group with three more treated by the addition of DHT.</p>
 <pre class="r"><code>treat_levels &lt;- c(&quot;E2&quot;, &quot;E2DHT&quot;)
 samples &lt;- tibble(
   accession = paste0(&quot;SRR831518&quot;, seq(0, 5)),
@@ -298,6 +297,7 @@ samples</code></pre>
 ## 4 SRR8315183 ER     E2DHT    
 ## 5 SRR8315184 ER     E2DHT    
 ## 6 SRR8315185 ER     E2DHT</code></pre>
+<p>We’ll also setup colours for each treatment for consistent visualisations throughout the analysis</p>
 <pre class="r"><code>treat_colours &lt;- setNames(c(&quot;steelblue&quot;, &quot;red3&quot;), treat_levels)</code></pre>
 </div>
 </div>
@@ -310,6 +310,7 @@ samples</code></pre>
 <p>Many functions exist for combining sets of ranges, such as <code>reduce()</code>, <code>intersect()</code>, <code>setdiff()</code> etc, however these have been extended in <code>extraChIPs</code> to <code>reduceMC()</code>, <code>intersectMC()</code>, <code>setdiffMC()</code> and <code>unionMC()</code> as well as tidy-aligned functions <code>chopMC()</code> and <code>distinctMC()</code>.
 This group of functions behaves identically to the core <code>GenomicRanges</code> versions, but retains data in the <code>mcols</code> element.
 These are used internally by many functions within the package, but also have many stand-alone uses.</p>
+<p>Define a simple set of ranges, with ids in the <code>mcols</code></p>
 <pre class="r"><code>x &lt;- GRanges(c(&quot;chr1:1-10&quot;, &quot;chr1:6-12&quot;))
 x$id &lt;- c(&quot;range1&quot;, &quot;range2&quot;)
 x</code></pre>
@@ -320,6 +321,7 @@ x</code></pre>
 ##   [2]     chr1      6-12      * |      range2
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<p>When calling <code>reduce()</code> we lose all <code>mcols</code> information.</p>
 <pre class="r"><code>reduce(x)</code></pre>
 <pre><code>## GRanges object with 1 range and 0 metadata columns:
 ##       seqnames    ranges strand
@@ -327,6 +329,7 @@ x</code></pre>
 ##   [1]     chr1      1-12      *
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<p>These are retained when calling <code>reduceMC</code></p>
 <pre class="r"><code>reduceMC(x)</code></pre>
 <pre><code>## GRanges object with 1 range and 1 metadata column:
 ##       seqnames    ranges strand |              id
@@ -334,6 +337,7 @@ x</code></pre>
 ##   [1]     chr1      1-12      * |   range1,range2
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<p>All other functions behave in a simlar manner</p>
 <pre class="r"><code>y &lt;- GRanges(c(&quot;chr1:11-15&quot;))
 intersect(x, y)</code></pre>
 <pre><code>## GRanges object with 1 range and 0 metadata columns:
@@ -381,13 +385,15 @@ intersect(x, y)</code></pre>
 <div id="tibble-coercion" class="section level3" number="2.1.2">
 <h3><span class="header-section-number">2.1.2</span> <code>tibble</code> Coercion</h3>
 <p>As this package is also designed to play well with the <code>tidyverse</code> the functions <code>as_tibble()</code> and <code>colToRanges()</code> have been introduced.
-When coercing to a <code>tibble</code>, the <code>GRanges</code> element is coerced to a character vector, although this can be returned to the more conventional set of columns by setting <code>rangeAsChar = FALSE</code></p>
-<pre class="r"><code>as_tibble(x)</code></pre>
+When coercing to a <code>tibble</code>, the <code>GRanges</code> element is coerced to a character vector.</p>
+<pre class="r"><code>tbl &lt;- as_tibble(x)
+tbl</code></pre>
 <pre><code>## # A tibble: 2 × 2
 ##   range     id    
 ##   &lt;chr&gt;     &lt;chr&gt; 
 ## 1 chr1:1-10 range1
 ## 2 chr1:6-12 range2</code></pre>
+<p>The tibble can be returned to the more conventional set of columns by setting <code>rangeAsChar = FALSE</code></p>
 <pre class="r"><code>as_tibble(x, rangeAsChar = FALSE)</code></pre>
 <pre><code>## # A tibble: 2 × 6
 ##   seqnames start   end width strand id    
@@ -396,8 +402,7 @@ When coercing to a <code>tibble</code>, the <code>GRanges</code> element is coer
 ## 2 chr1         6    12     7 *      range2</code></pre>
 <p>Additional methods have been implemented for easy coercion of <code>DataFrame</code>, <code>GInteractions</code>, <code>Seqinfo</code>, <code>SummarzedExperiment</code> and <code>TopTags</code> objects</p>
 <p>Coercion is implemented from <code>tibble</code> to <code>GRanges</code> using <code>colToRanges()</code></p>
-<pre class="r"><code>tbl &lt;- as_tibble(x)
-colToRanges(tbl, var = &quot;range&quot;)</code></pre>
+<pre class="r"><code>colToRanges(tbl, var = &quot;range&quot;)</code></pre>
 <pre><code>## GRanges object with 2 ranges and 1 metadata column:
 ##       seqnames    ranges strand |          id
 ##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;

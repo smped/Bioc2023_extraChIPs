@@ -23,7 +23,7 @@ vignette: |
 ```{r setup, echo=FALSE, eval = TRUE}
 knitr::opts_chunk$set(
   message = FALSE, warning = FALSE,
-  fig.height = 6, fig.width = 8, dev = 'png'
+  fig.height = 6, fig.width = 8, dev = 'png', crop = NULL
 )
 ```
 
@@ -85,7 +85,6 @@ Data has been taken from ZR-75-1 cells cultured in Estrogen (E2) or Estrogen + D
 
 The sample sheet for the ER$\alpha$ samples can be setup by copying the following code.
 As can be seen, we have three samples from the E2 (baseline) group with three more treated by the addition of DHT.
-We'll also setup colours for each treatment for consistent visualisations throughout the session.
 
 ```{r samples}
 treat_levels <- c("E2", "E2DHT")
@@ -95,6 +94,11 @@ samples <- tibble(
   treatment = factor(rep(treat_levels, each = 3), levels = treat_levels)
 )
 samples
+```
+
+We'll also setup colours for each treatment for consistent visualisations throughout the analysis
+
+```{r treat-colours}
 treat_colours <- setNames(c("steelblue", "red3"), treat_levels)
 ```
 
@@ -110,13 +114,27 @@ Many functions exist for combining sets of ranges, such as `reduce()`, `intersec
 This group of functions behaves identically to the core `GenomicRanges` versions, but retains data in the `mcols` element.
 These are used internally by many functions within the package, but also have many stand-alone uses.
 
-```{r reduce-mc}
+Define a simple set of ranges, with ids in the `mcols`
+
+```{r define0x}
 x <- GRanges(c("chr1:1-10", "chr1:6-12"))
 x$id <- c("range1", "range2")
 x
+```
+
+When calling `reduce()` we lose all `mcols` information.
+
+```{r reduce}
 reduce(x)
+```
+
+These are retained when calling `reduceMC`
+
+```{r reduce-mc}
 reduceMC(x)
 ```
+
+All other functions behave in a simlar manner
 
 ```{r other-mc}
 y <- GRanges(c("chr1:11-15"))
@@ -132,10 +150,16 @@ unionMC(x, y)
 ### `tibble` Coercion
 
 As this package is also designed to play well with the `tidyverse` the functions `as_tibble()` and `colToRanges()` have been introduced.
-When coercing to a `tibble`, the `GRanges` element is coerced to a character vector, although this can be returned to the more conventional set of columns by setting `rangeAsChar = FALSE`
+When coercing to a `tibble`, the `GRanges` element is coerced to a character vector.
 
 ```{r as-tibble}
-as_tibble(x)
+tbl <- as_tibble(x)
+tbl
+```
+
+The tibble can be returned to the more conventional set of columns by setting `rangeAsChar = FALSE`
+
+```{r range-as-char}
 as_tibble(x, rangeAsChar = FALSE)
 ```
 
@@ -144,7 +168,6 @@ Additional methods have been implemented for easy coercion of `DataFrame`, `GInt
 Coercion is implemented from `tibble` to `GRanges` using `colToRanges()`
 
 ```{r col-to-ranges}
-tbl <- as_tibble(x)
 colToRanges(tbl, var = "range")
 ```
 
