@@ -10,7 +10,8 @@ author:
 package: extraChIPs
 bibliography: references.bib
 output:
-  BiocStyle::html_document
+  BiocStyle::html_document:
+    self_contained: false
 abstract: |
   extraChIPs: Package Demo
 vignette: |
@@ -22,7 +23,7 @@ vignette: |
 ```{r setup, echo=FALSE, eval = TRUE}
 knitr::opts_chunk$set(
   message = FALSE, warning = FALSE,
-  fig.height = 6, fig.width = 8
+  fig.height = 6, fig.width = 8, dev = 'png'
 )
 ```
 
