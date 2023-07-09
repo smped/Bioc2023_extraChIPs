@@ -1,0 +1,273 @@
+---
+title: "Bioc2023: extraChIPs Package Demonstration"
+author:
+- name: Stevie Pederson
+  affiliation: 
+  - Black Ochre Data Laboratories, Telethon Kids Institute, Adelaide, Australia
+  - Dame Roma Mitchell Cancer Researc Laboratories, University of Adelaide
+  - John Curtin School of Medical Research, Australian National University
+  email: stephen.pederson.au@gmail.com
+package: extraChIPs
+bibliography: references.bib
+output:
+  BiocStyle::html_document
+abstract: |
+  extraChIPs: Package Demo
+vignette: |
+  %\VignetteIndexEntry{Package Demonstration}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, echo=FALSE, eval = TRUE}
+knitr::opts_chunk$set(
+  message = FALSE, warning = FALSE,
+  fig.height = 6, fig.width = 8
+)
+```
+
+
+# Introduction
+
+## Package Introduction
+
+`extraChIPs` was developed to provide key infrastructure for a larger ChIP-Seq workflow comparing binding dynamics across multiple ChIP targets.
+The focus is on:
+
+- Differential Signal Detection
+- Comparison between ChIP targets or sets of results
+- Working with GRanges objects containing important values in the `mcols()` element
+- Visualisation of Data and Results
+
+The package was developed to utilise *existing* S4 Object Classes and behave in a *tidy-friendly manner*, whilst not being strictly designed under tidy programming guidelines.
+Some functions may be analogous to those in existing packages, but the aim is to be simple and intuitive to use, whilst simplifying high-performance analyses.
+Previous work by the authors of DiffBind [@DiffBind2012] and csaw [@csaw2016] has been instrumental in the package design, along with the tidyverse [@tidyverse2019] and edgeR [@edgeRQLF2016].
+
+## Data and Workshop Setup
+
+Today's workshop will focus on the `devel` version of the package, which can be installed using
+
+```{r install-bioc, eval = FALSE}
+BiocManager::install(
+  "extraChIPs", version = "devel", update = FALSE, ask = FALSE
+)
+```
+
+Alternatively, this can be installed directly from github
+
+```{r install-github, eval = FALSE}
+BiocManager::install(
+  "smped/extraChIPs", ref = "devel", update = FALSE, ask = FALSE
+)
+```
+
+Additional packages required can be installed as follows:
+
+```{r install-extra, eval=FALSE}
+pkg <- c("rtracklayer", "tidyverse", "glue", "plyranges")
+BiocManager::install(pkgs = pkg, update = FALSE, ask = FALSE)
+```
+
+```{r packages}
+library(tidyverse)
+library(glue)
+library(plyranges)
+library(extraChIPs)
+```
+
+
+Data can be obtained from [here]() and should be placed in a folder called `data` within your current working directory.
+This data has been preprocessed [here](https://github.com/smped/PRJNA509779) using the prepareChIPs workflow [@pederson_2023], and subset to a region on Chromosome 10 for easier working in today's context.
+
+The two targets in this dataset are the Estrogen Receptor (ER$\alpha$) and the histone mark H3K27ac.
+Data has been taken from ZR-75-1 cells cultured in Estrogen (E2) or Estrogen + Dihydrotestosterone (E2DHT), and was first published by researchers from the Dame Roma Mitchell Cancer Research Laboratories [@Hickey2021-mz]
+
+The sample sheet for the ER$\alpha$ samples can be setup by copying the following code.
+As can be seen, we have three samples from the E2 (baseline) group with three more treated by the addition of DHT.
+We'll also setup colours for each treatment for consistent visualisations throughout the session.
+
+```{r samples}
+treat_levels <- c("E2", "E2DHT")
+samples <- tibble(
+  accession = paste0("SRR831518", seq(0, 5)),
+  target = "ER",
+  treatment = factor(rep(treat_levels, each = 3), levels = treat_levels)
+)
+samples
+treat_colours <- setNames(c("steelblue", "red3"), treat_levels)
+```
+
+
+# Workshop Material
+
+
+## Core Infrastructure
+
+### `*MC()` Functions
+
+Many functions exist for combining sets of ranges, such as `reduce()`, `intersect()`, `setdiff()` etc, however these have been extended in `extraChIPs` to `reduceMC()`, `intersectMC()`, `setdiffMC()` and `unionMC()` as well as tidy-aligned functions `chopMC()` and `distinctMC()`.
+This group of functions behaves identically to the core `GenomicRanges` versions, but retains data in the `mcols` element.
+These are used internally by many functions within the package, but also have many stand-alone uses.
+
+```{r reduce-mc}
+x <- GRanges(c("chr1:1-10", "chr1:6-12"))
+x$id <- c("range1", "range2")
+x
+reduce(x)
+reduceMC(x)
+```
+
+```{r other-mc}
+y <- GRanges(c("chr1:11-15"))
+intersect(x, y)
+intersectMC(x, y)
+setdiff(x, y)
+setdiffMC(x, y)
+union(x, y)
+unionMC(x, y)
+```
+
+
+### `tibble` Coercion
+
+As this package is also designed to play well with the `tidyverse` the functions `as_tibble()` and `colToRanges()` have been introduced.
+When coercing to a `tibble`, the `GRanges` element is coerced to a character vector, although this can be returned to the more conventional set of columns by setting `rangeAsChar = FALSE`
+
+```{r as-tibble}
+as_tibble(x)
+as_tibble(x, rangeAsChar = FALSE)
+```
+
+Additional methods have been implemented for easy coercion of `DataFrame`, `GInteractions`, `Seqinfo`, `SummarzedExperiment` and `TopTags` objects
+
+Coercion is implemented from `tibble` to `GRanges` using `colToRanges()`
+
+```{r col-to-ranges}
+tbl <- as_tibble(x)
+colToRanges(tbl, var = "range")
+```
+
+Whilst the `seqinfo` is clearly lost in the reverse coercion, `colToRanges()` also allows for moving a `GRanges` object within the `mcols` element to be set as a new set of ranges.
+In this case, the `seqinfo` will be retained.
+
+## Working With Peaks
+
+### Import and Visualisation
+
+Broad and Narrow Peak files as output by peak callers such as `macs2 callpeak` [@Zhang2008-ms] can be imported using `importPeaks()`.
+This will always return a `GRangesList` for simple downstream analysis.
+If importing `narrowPeak` files, the peak centre can be automatically added.
+
+```{r import-peaks}
+fl <- glue("data/{samples$accession}_peaks.narrowPeak")
+peaks <- importPeaks(fl, centre = TRUE)
+names(peaks) <- str_remove_all(names(peaks), "_peaks.narrowPeak")
+```
+
+(Names can also be set using `glue` syntax, however the above is generally more easily comprehended at first glance.)
+
+One of the first tasks is usually to check how similar our replicates are, which is easily performed using `plotOverlaps()`
+
+
+```{r plot-overlaps, fig.cap = "Overlapping peaks between all replicates"}
+plotOverlaps(peaks, set_col = treat_colours[samples$treatment])
+```
+
+`plotOverlaps()` calls the plotting functions provided by `ComplexUpset::upset()` [@ComplexUpset2020] and as such, can handle any additional parameters which are understood by this function.
+
+```{r plot-overlaps2, fig.cap = "Overlapping peaks, showing only intersections with 10 or more members and retaining the original sample ordering"}
+plotOverlaps(
+  peaks, .sort_sets = FALSE, 
+  set_col = treat_colours[samples$treatment], n_intersections = 10
+)
+```
+
+## Consensus Peaks
+
+The next step might be to form a set of consensus peaks for each treatment.
+Just forming a set of consensus peaks for the E2 samples can be done manually
+
+```{r make-consensus}
+makeConsensus(peaks[1:3])
+```
+
+In reality, we may prefer to only retain peaks found in 2/3 samples and we can do this by setting `p = 2/3`.
+We can also also `makeConsensus` to retain one or more columns from the original peaks using `var = `
+
+```{r make-consensus-p}
+makeConsensus(peaks[1:3], p = 2/3, var = "centre")
+```
+
+By default, this takes the union of the ranges called as peaks in each sample.
+We may instead prefer to just retain regions *covered* in $\geq$ 2/3 samples.
+Not that whilst we have the same number of ranges here, the ranges are tighter.
+
+```{r make-consensus-coverage}
+makeConsensus(peaks[1:3], p = 2/3, method = "coverage")
+```
+
+In order to make consensus peaks for each condition, we can split by treatment group, then use a simple `lapply()` trick, to work wth both treatment groups together.
+
+```{r lapply-consenses}
+cons_peaks <- peaks %>% 
+  split(f = samples$treatment) %>% 
+  lapply(makeConsensus, p = 2/3, var = "centre") %>% 
+  lapply(select, centre) %>% 
+  lapply(mutate, centre = vapply(centre, mean, numeric(1))) %>% 
+  GRangesList()
+```
+
+A lot happened in that code chunk, se let's break it down
+
+1. We split samples based on the treatment (`split(f = samples$treatment)`), then
+2. Identified consensus peaks within each treatment found in 2/3 samples, retaining the peak centre (`lapply(makeConsensus, p = 2/3, var = "centre")`)
+3. Subset the mcols to only retain the peak centre (`lapply(select, centre)`). 
+4. The previous step returned centre estimates as a `NumericList`, so we took the mean of these for each consensus peak
+5. We coerced to a `GRangeList`
+
+Now we can compare our two treatment conditions using `plotOverlaps()` again, which will return a Venn Diagram when passing a `GRangesList` of length 2.
+
+```{r plot-cons-overlap, fig.width=6, fig.cap = "Overlaps betwen consensus peaks specific to each treatment group"}
+plotOverlaps(cons_peaks, set_col = treat_colours)
+```
+
+Finally, we can form a set of "union" peaks, defined as those within a consensus peak for either treatment group.
+
+```{r union-peaks}
+union_peaks <- makeConsensus(cons_peaks, var = "centre") %>% 
+  mutate(centre = vapply(centre, mean, numeric(1)) %>% round(0))
+```
+
+
+## Differential Signal Detection
+
+### Using Fixed-Width Windows
+
+Now that we've defined our set of peaks present under either condition, we can use these to perform a differential signal analysis.
+Existing packages such as `DiffBind` use fixed-width regions to minimise bias from variable sized regions.
+Using `extraChIPs` we can define these ranges using our peak centres that we've carried forward.
+
+```{r cetred-peaks}
+centred_peaks <- union_peaks %>% 
+  mutate(centre = paste0(seqnames, ":", centre)) %>% 
+  colToRanges(var = "centre") %>% 
+  resize(width = 400, fix = "center") %>% 
+  granges()
+```
+
+In the above, we've 1) created a new range from the centre-points, then 2) moved it to being the primary range using `colToRanges()`.
+From there, we've 3) resized to a standard width of 400bp then 4) discarded all `mcols`.
+We can now use these ranges to count alignments across our set of samples.
+
+### Using Sliding Windows
+
+## Comparing Both Sets Of Results
+
+# References {.unnumbered}
+
+
+# Session info
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```

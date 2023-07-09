@@ -1,0 +1,116 @@
+@Article{DiffBind2012,
+    title = {Differential oestrogen receptor binding is associated with clinical outcome in breast cancer},
+    author = {Caryn S. Ross-Innes and Rory Stark and Andrew E. Teschendorff and Kelly A. Holmes and H. Raza Ali and Mark J. Dunning and Gordon D. Brown and Ondrej Gojis and Ian O. Ellis and Andrew R. Green and Simak Ali and Suet-Feung Chin and Carlo Palmieri and Carlos Caldas and Jason S. Carroll},
+    journal = {Nature},
+    year = {2012},
+    volume = {481},
+    pages = {-4},
+    url = {http://www.nature.com/nature/journal/v481/n7381/full/nature10730.html},
+  }
+  
+@Article{csaw2016,
+    author = {Aaron T L Lun and Gordon K Smyth},
+    title = {csaw: a {B}ioconductor package for differential binding analysis of {C}h{I}{P}-seq data using sliding windows},
+    journal = {Nucleic Acids Res.},
+    year = {2016},
+    volume = {44},
+    number = {5},
+    pages = {e45},
+  }
+
+@Article{edgeRQLF2016,
+    author = {Yunshun Chen and Aaron A T Lun and Gordon K Smyth},
+    title = {From reads to genes to pathways: differential expression analysis of RNA-Seq experiments using Rsubread and the edgeR quasi-likelihood pipeline},
+    year = {2016},
+    journal = {F1000Research},
+    volume = {5},
+    pages = {1438},
+    doi = {10.12688/f1000research.8987.2},
+  }
+  
+ @Article{tidyverse2019,
+    title = {Welcome to the {tidyverse}},
+    author = {Hadley Wickham and Mara Averick and Jennifer Bryan and Winston Chang and Lucy D'Agostino McGowan and Romain François and Garrett Grolemund and Alex Hayes and Lionel Henry and Jim Hester and Max Kuhn and Thomas Lin Pedersen and Evan Miller and Stephan Milton Bache and Kirill Müller and Jeroen Ooms and David Robinson and Dana Paige Seidel and Vitalie Spinu and Kohske Takahashi and Davis Vaughan and Claus Wilke and Kara Woo and Hiroaki Yutani},
+    year = {2019},
+    journal = {Journal of Open Source Software},
+    volume = {4},
+    number = {43},
+    pages = {1686},
+    doi = {10.21105/joss.01686},
+  }
+  
+  @article{pederson_2023, 
+  title={prepareChIPs:}, url={https://workflowhub.eu/workflows/528?version=1}, DOI={10.48546/WORKFLOWHUB.WORKFLOW.528.1}, abstractNote={# prepareChIPs This is a simple `snakemake` workflow template for preparing **single-end** ChIP-Seq data. The steps implemented are: 1. Download raw fastq files from SRA 2. Trim and Filter raw fastq files using `AdapterRemoval` 3. Align to the supplied genome using `bowtie2` 4. Deduplicate Alignments using `Picard MarkDuplicates` 5. Call Macs2 Peaks using `macs2` A pdf of the rulegraph is available [here](workflow/rules/rulegraph.pdf) Full details for each step are given below. Any additional parameters for tools can be specified using `config/config.yml`, along with many of the requisite paths To run the workflow with default settings, simply run as follows (after editing `config/samples.tsv`) ```bash snakemake --use-conda --cores 16 ``` If running on an HPC cluster, a snakemake profile will required for submission to the queueing system and appropriate resource allocation. Please discuss this will your HPC support team. Nodes may also have restricted internet access and rules which download files may not work on many HPCs. Please see below or discuss this with your support team Whilst no snakemake wrappers are explicitly used in this workflow, the underlying scripts are utilised where possible to minimise any issues with HPC clusters with restrictions on internet access. These scripts are based on `v1.31.1` of the snakemake wrappers ### Important Note Regarding OSX Systems It should be noted that this workflow is **currently incompatible with OSX-based systems**. There are two unsolved issues 1. `fasterq-dump` has a bug which is specific to conda environments. This has been updated in v3.0.3 but this patch has not yet been made available to conda environments for OSX. Please check [here](https://anaconda.org/bioconda/sra-tools) to see if this has been updated. 2. The following error appears in some OSX-based R sessions, in a system-dependent manner: ``` Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : polygon edge not found ``` The fix for this bug is currently unknown ## Download Raw Data ### Outline The file `samples.tsv` is used to specify all steps for this workflow. This file must contain the columns: `accession`, `target`, `treatment` and `input` 1. `accession` must be an SRA accession. Only single-end data is currently supported by this workflow 2. `target` defines the ChIP target. All files common to a target and treatment will be used to generate summarised coverage in bigWig Files 3. `treatment` defines the treatment group each file belongs to. If only one treatment exists, simply use the value 'control' or similar for every file 4. `input` should contain the accession for the relevant input sample. These will only be downloaded once. Valid input samples are *required* for this workflow As some HPCs restrict internet access for submitted jobs, *it may be prudent to run the initial rules in an interactive session* if at all possible. This can be performed using the following (with 2 cores provided as an example) ```bash snakemake --use-conda --until get_fastq --cores 2 ``` ### Outputs - Downloaded files will be gzipped and written to `data/fastq/raw`. - `FastQC` and `MultiQC` will also be run, with output in `docs/qc/raw` Both of these directories are able to be specified as relative paths in `config.yml` ## Read Filtering ### Outline Read trimming is performed using [AdapterRemoval](https://adapterremoval.readthedocs.io/en/stable/). Default settings are customisable using config.yml, with the defaults set to discard reads shorter than 50nt, and to trim using quality scores with a threshold of Q30. ### Outputs - Trimmed fastq.gz files will be written to `data/fastq/trimmed` - `FastQC` and `MultiQC` will also be run, with output in `docs/qc/trimmed` - AdapterRemoval 'settings' files will be written to `output/adapterremoval` ## Alignments ### Outline Alignment is performed using [`bowtie2`](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml) and it is assumed that this index is available before running this workflow. The path and prefix must be provided using config.yml This index will also be used to produce the file `chrom.sizes` which is essential for conversion of bedGraph files to the more efficient bigWig files. ### Outputs - Alignments will be written to `data/aligned` - `bowtie2` log files will be written to `output/bowtie2` (not the conenvtional log directory) - The file `chrom.sizes` will be written to `output/annotations` Both sorted and the original unsorted alignments will be returned. However, the unsorted alignments are marked with `temp()` and can be deleted using ```bash snakemake --delete-temp-output --cores 1 ``` ## Deduplication ### Outline Deduplication is performed using [MarkDuplicates](https://gatk.broadinstitute.org/hc/en-us/articles/360037052812-MarkDuplicates-Picard-) from the Picard set of tools. By default, deduplication will remove the duplicates from the set of alignments. All resultant bam files will be sorted and indexed. ### Outputs - Deduplicated alignments are written to `data/deduplicated` and are indexed - DuplicationMetrics files are written to `output/markDuplicates` ## Peak Calling ### Outline This is performed using [`macs2 callpeak`](https://pypi.org/project/MACS2/). - Peak calling will be performed on: a. each sample individually, and b. merged samples for those sharing a common ChIP target and treatment group. - Coverage bigWig files for each individual sample are produced using CPM values (i.e. Signal Per Million Reads, SPMR) - For all combinations of target and treatment coverage bigWig files are also produced, along with fold-enrichment bigWig files ### Outputs - Individual outputs are written to `output/macs2/{accession}` + Peaks are written in `narrowPeak` format along with `summits.bed` + bedGraph files are automatically converted to bigWig files, and the originals are marked with `temp()` for subsequent deletion + callpeak log files are also added to this directory - Merged outputs are written to `output/macs2/{target}/` + bedGraph Files are also converted to bigWig and marked with `temp()` + Fold-Enrichment bigWig files are also created with the original bedGraph files marked with `temp()`}, publisher={WorkflowHub}, author={Pederson, Stevie}, year={2023} }
+  
+  
+@ARTICLE{Hickey2021-mz,
+  title    = "The androgen receptor is a tumor suppressor in estrogen
+              receptor-positive breast cancer",
+  author   = "Hickey, Theresa E and Selth, Luke A and Chia, Kee Ming and
+              Laven-Law, Geraldine and Milioli, Heloisa H and Roden, Daniel and
+              Jindal, Shalini and Hui, Mun and Finlay-Schultz, Jessica and
+              Ebrahimie, Esmaeil and Birrell, Stephen N and Stelloo, Suzan and
+              Iggo, Richard and Alexandrou, Sarah and Caldon, C Elizabeth and
+              Abdel-Fatah, Tarek M and Ellis, Ian O and Zwart, Wilbert and
+              Palmieri, Carlo and Sartorius, Carol A and Swarbrick, Alex and
+              Lim, Elgene and Carroll, Jason S and Tilley, Wayne D",
+  abstract = "The role of the androgen receptor (AR) in estrogen receptor
+              (ER)-$\alpha$-positive breast cancer is controversial,
+              constraining implementation of AR-directed therapies. Using a
+              diverse, clinically relevant panel of cell-line and
+              patient-derived models, we demonstrate that AR activation, not
+              suppression, exerts potent antitumor activity in multiple disease
+              contexts, including resistance to standard-of-care ER and CDK4/6
+              inhibitors. Notably, AR agonists combined with standard-of-care
+              agents enhanced therapeutic responses. Mechanistically, agonist
+              activation of AR altered the genomic distribution of ER and
+              essential co-activators (p300, SRC-3), resulting in repression of
+              ER-regulated cell cycle genes and upregulation of AR target
+              genes, including known tumor suppressors. A gene signature of AR
+              activity positively predicted disease survival in multiple
+              clinical ER-positive breast cancer cohorts. These findings
+              provide unambiguous evidence that AR has a tumor suppressor role
+              in ER-positive breast cancer and support AR agonism as the
+              optimal AR-directed treatment strategy, revealing a rational
+              therapeutic opportunity.",
+  journal  = "Nat. Med.",
+  volume   =  27,
+  number   =  2,
+  pages    = "310--320",
+  month    =  feb,
+  year     =  2021,
+  language = "en"
+}
+
+
+@ARTICLE{Zhang2008-ms,
+  title    = "Model-based analysis of {ChIP-Seq} ({MACS})",
+  author   = "Zhang, Yong and Liu, Tao and Meyer, Clifford A and Eeckhoute,
+              J{\'e}r{\^o}me and Johnson, David S and Bernstein, Bradley E and
+              Nusbaum, Chad and Myers, Richard M and Brown, Myles and Li, Wei
+              and Liu, X Shirley",
+  abstract = "We present Model-based Analysis of ChIP-Seq data, MACS, which
+              analyzes data generated by short read sequencers such as Solexa's
+              Genome Analyzer. MACS empirically models the shift size of
+              ChIP-Seq tags, and uses it to improve the spatial resolution of
+              predicted binding sites. MACS also uses a dynamic Poisson
+              distribution to effectively capture local biases in the genome,
+              allowing for more robust predictions. MACS compares favorably to
+              existing ChIP-Seq peak-finding algorithms, and is freely
+              available.",
+  journal  = "Genome Biol.",
+  volume   =  9,
+  number   =  9,
+  pages    = "R137",
+  month    =  sep,
+  year     =  2008,
+  language = "en"
+}
+
+@Misc{ComplexUpset2020,
+    title = {ComplexUpset},
+    author = {Michał Krassowski},
+    year = {2020},
+    url = {https://doi.org/10.5281/zenodo.3700590},
+    doi = {10.5281/zenodo.3700590},
+  }
