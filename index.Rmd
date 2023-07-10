@@ -65,7 +65,9 @@ BiocManager::install(
 Additional packages required can be installed as follows:
 
 ```{r install-extra, eval=FALSE}
-pkg <- c("rtracklayer", "tidyverse", "glue", "plyranges")
+pkg <- c(
+  "rtracklayer", "tidyverse", "glue", "plyranges", "Rsamtools", "csaw", "edgeR"
+)
 BiocManager::install(pkgs = pkg, update = FALSE, ask = FALSE)
 ```
 
@@ -74,6 +76,11 @@ library(tidyverse)
 library(glue)
 library(plyranges)
 library(extraChIPs)
+library(Rsamtools)
+library(csaw)
+library(edgeR)
+library(rtracklayer)
+theme_set(theme_bw())
 ```
 
 
@@ -86,14 +93,14 @@ Data has been taken from ZR-75-1 cells cultured in Estrogen (E2) or Estrogen + D
 The sample sheet for the ER$\alpha$ samples can be setup by copying the following code.
 As can be seen, we have three samples from the E2 (baseline) group with three more treated by the addition of DHT.
 
-```{r samples}
+```{r er_samples}
 treat_levels <- c("E2", "E2DHT")
-samples <- tibble(
+er_samples <- tibble(
   accession = paste0("SRR831518", seq(0, 5)),
   target = "ER",
   treatment = factor(rep(treat_levels, each = 3), levels = treat_levels)
 )
-samples
+er_samples
 ```
 
 We'll also setup colours for each treatment for consistent visualisations throughout the analysis
@@ -102,13 +109,19 @@ We'll also setup colours for each treatment for consistent visualisations throug
 treat_colours <- setNames(c("steelblue", "red3"), treat_levels)
 ```
 
+Finally, we'll define a `Seqinfo` object just for today's data.
 
-# Workshop Material
+```{r sq}
+sq <- Seqinfo(
+  seqnames = "chr10", seqlengths = 135534747, isCircular = FALSE, genome = "hg19"
+)
+```
 
 
-## Core Infrastructure
 
-### `*MC()` Functions
+# Core Infrastructure
+
+## `*MC()` Functions
 
 Many functions exist for combining sets of ranges, such as `reduce()`, `intersect()`, `setdiff()` etc, however these have been extended in `extraChIPs` to `reduceMC()`, `intersectMC()`, `setdiffMC()` and `unionMC()` as well as tidy-aligned functions `chopMC()` and `distinctMC()`.
 This group of functions behaves identically to the core `GenomicRanges` versions, but retains data in the `mcols` element.
@@ -147,7 +160,7 @@ unionMC(x, y)
 ```
 
 
-### `tibble` Coercion
+## `tibble` Coercion
 
 As this package is also designed to play well with the `tidyverse` the functions `as_tibble()` and `colToRanges()` have been introduced.
 When coercing to a `tibble`, the `GRanges` element is coerced to a character vector.
@@ -174,17 +187,17 @@ colToRanges(tbl, var = "range")
 Whilst the `seqinfo` is clearly lost in the reverse coercion, `colToRanges()` also allows for moving a `GRanges` object within the `mcols` element to be set as a new set of ranges.
 In this case, the `seqinfo` will be retained.
 
-## Working With Peaks
+# Working With Peaks
 
-### Import and Visualisation
+## Import and Visualisation
 
 Broad and Narrow Peak files as output by peak callers such as `macs2 callpeak` [@Zhang2008-ms] can be imported using `importPeaks()`.
 This will always return a `GRangesList` for simple downstream analysis.
 If importing `narrowPeak` files, the peak centre can be automatically added.
 
 ```{r import-peaks}
-fl <- glue("data/{samples$accession}_peaks.narrowPeak")
-peaks <- importPeaks(fl, centre = TRUE)
+fl <- glue("data/{er_samples$accession}_peaks.narrowPeak")
+peaks <- importPeaks(fl, seqinfo = sq, centre = TRUE)
 names(peaks) <- str_remove_all(names(peaks), "_peaks.narrowPeak")
 ```
 
@@ -194,7 +207,7 @@ One of the first tasks is usually to check how similar our replicates are, which
 
 
 ```{r plot-overlaps, fig.cap = "Overlapping peaks between all replicates"}
-plotOverlaps(peaks, set_col = treat_colours[samples$treatment])
+plotOverlaps(peaks, set_col = treat_colours[er_samples$treatment])
 ```
 
 `plotOverlaps()` calls the plotting functions provided by `ComplexUpset::upset()` [@ComplexUpset2020] and as such, can handle any additional parameters which are understood by this function.
@@ -202,7 +215,7 @@ plotOverlaps(peaks, set_col = treat_colours[samples$treatment])
 ```{r plot-overlaps2, fig.cap = "Overlapping peaks, showing only intersections with 10 or more members and retaining the original sample ordering"}
 plotOverlaps(
   peaks, .sort_sets = FALSE, 
-  set_col = treat_colours[samples$treatment], n_intersections = 10
+  set_col = treat_colours[er_samples$treatment], n_intersections = 10
 )
 ```
 
@@ -234,7 +247,7 @@ In order to make consensus peaks for each condition, we can split by treatment g
 
 ```{r lapply-consenses}
 cons_peaks <- peaks %>% 
-  split(f = samples$treatment) %>% 
+  split(f = er_samples$treatment) %>% 
   lapply(makeConsensus, p = 2/3, var = "centre") %>% 
   lapply(select, centre) %>% 
   lapply(mutate, centre = vapply(centre, mean, numeric(1))) %>% 
@@ -243,7 +256,7 @@ cons_peaks <- peaks %>%
 
 A lot happened in that code chunk, se let's break it down
 
-1. We split samples based on the treatment (`split(f = samples$treatment)`), then
+1. We split samples based on the treatment (`split(f = er_samples$treatment)`), then
 2. Identified consensus peaks within each treatment found in 2/3 samples, retaining the peak centre (`lapply(makeConsensus, p = 2/3, var = "centre")`)
 3. Subset the mcols to only retain the peak centre (`lapply(select, centre)`). 
 4. The previous step returned centre estimates as a `NumericList`, so we took the mean of these for each consensus peak
@@ -262,30 +275,269 @@ union_peaks <- makeConsensus(cons_peaks, var = "centre") %>%
   mutate(centre = vapply(centre, mean, numeric(1)) %>% round(0))
 ```
 
+## Mapping Peaks to Regulatory Regions
 
-## Differential Signal Detection
+Now we have detected our ranges where ER$\alpha$ appears to have bound, we might wish to find which genes are likely targets and what type of genomic feature is associated with each range.
+First let's define some genomic regions.
 
-### Using Fixed-Width Windows
+A Gencode GTF has been provided in data, restricted to the regions of chr10 we're working with today.
+We can load this then, split based on the feature type, giving a `GRangesList` with gene, transcript and exon-level features.
+
+```{r load-gtf}
+gtf <- file.path("data", "gencode.v43lift37.chr10.annotation.gtf.gz") %>% 
+  import.gff() %>% 
+  split(.$type)
+seqinfo(gtf) <- sq
+```
+
+The function `defineRegions()` enables us to define 1) Promoter, 2) Upstream Promoter, 3) Intron, 4) Exon, 5) Proximal Intergenic and 6) Distal Intergenic Regions.
+The distances for these regions can be specified by the user, but here we'll just use the defaults.
+
+```{r regions}
+regions <- defineRegions(
+  genes = gtf$gene, transcripts = gtf$transcript, exons = gtf$exon
+)
+regions
+```
+
+Now we can assign these to the peaks using `bestOverlap`
+
+```{r best-overlap}
+union_peaks$region <- bestOverlap(union_peaks, regions)
+union_peaks
+```
+
+When providing a `GRangesList` the overlaps are defined by the element names.
+Alternatively, we could pass a `GRanges` object and specify the name from the `mcols` element we wish to us.
+
+```{r better-overlap}
+union_peaks$region <- bestOverlap(union_peaks, unlist(regions), var = "region")
+union_peaks
+```
+
+Let's set these as a factor in order as contained in the original set of regions.
+
+```{r set-region-levels}
+reg_levels <- vapply(regions, function(x) x$region[1], character(1))
+union_peaks$region <- factor(union_peaks$region, levels = reg_levels)
+```
+
+
+We can check the distribution of our peaks against these regions using `plotPie()`
+
+```{r plotpie-default, fig.cap = "Distribution of peaks within defined regulatory regions"}
+region_colours <- hcl.colors(6, "viridis", rev = TRUE)
+names(region_colours) <- reg_levels
+plotPie(union_peaks, fill = "region") +
+  scale_fill_manual(values = region_colours)
+```
+
+The labels for `plotPie()` use the `glue` syntax, lending enormous flexibility to what can be placed here.
+Whist the defaults are hopefully useful, in the code below. we'll modify these to wrap the text using `str_wrap()` and add `n =` to the peak numbers.
+
+```{r plotpie-labels, fig.cap = "Distribution of peaks with manually tweaked segment labels"}
+plotPie(
+  union_peaks, fill = "region", total_size = 5,
+  cat_glue = "{str_wrap(.data[[fill]], 15)}\nn = {comma(n, 1)}\n({percent(p, 0.1)})"
+) +
+  scale_fill_manual(values = region_colours)
+```
+
+
+Finally, we might wish to know which genes are likely targets for each peak.
+`mapByFeature()` uses a mapping strategy which maps peaks/ranges to genes differently depending on which type of feature they overlap.
+
+1. Ranges overlapping a *promoter* are only assigned to the gene(s) associated with that promoter
+2. Ranges overlapping an *enhancer* are mapped to all gene within a given distance
+3. Ranges overlapping a *long-range interaction* are mapped to genes at both ends of the interaction
+4. Remaining ranges are mapped to the *nearest gene* within a given distance
+
+```{r add-genes}
+union_peaks <- mapByFeature(union_peaks, genes = gtf$gene, prom = regions$promoter)
+union_peaks %>% filter(str_detect(region, "^Promoter"), !E2)
+```
+
+
+# Differential Signal Detection
+
+## Using Fixed-Width Windows
+
+### Reading In Counts
 
 Now that we've defined our set of peaks present under either condition, we can use these to perform a differential signal analysis.
 Existing packages such as `DiffBind` use fixed-width regions to minimise bias from variable sized regions.
 Using `extraChIPs` we can define these ranges using our peak centres that we've carried forward.
 
-```{r cetred-peaks}
+```{r centred-peaks}
 centred_peaks <- union_peaks %>% 
-  mutate(centre = paste0(seqnames, ":", centre)) %>% 
+  mutate(
+    centre = paste0(seqnames, ":", centre),
+    union_peak = granges(.)
+  ) %>% 
   colToRanges(var = "centre") %>% 
-  resize(width = 400, fix = "center") %>% 
-  granges()
+  resize(width = 400, fix = "center") 
 ```
 
-In the above, we've 1) created a new range from the centre-points, then 2) moved it to being the primary range using `colToRanges()`.
-From there, we've 3) resized to a standard width of 400bp then 4) discarded all `mcols`.
+In the above, we've 1) created a new range from the centre-points, 2) placed the original range as a new column in the `mcols` element, 3) moved the centred range to being the primary range using `colToRanges()`.
+From there, we've resized to a standard width of 400bp.
 We can now use these ranges to count alignments across our set of samples.
+The bam files should be in the `data` directory and can be formed into a BamFileList, before being passed to `regionCounts()` from `csaw`.
+This will return a `RangedSummarizedExperiment` with totals from the entire bam file in the `totals` column of the colData element
 
-### Using Sliding Windows
+```{r load-er-counts}
+er_bfl <- BamFileList(glue("data/{er_samples$accession}.bam"))
+names(er_bfl) <- er_samples$accession
+er_se <- regionCounts(er_bfl, centred_peaks, ext = 200)
+seqinfo(er_se) <- sq
+er_se
+colData(er_se)
+```
 
-## Comparing Both Sets Of Results
+Let's ensure our sample metadata is consistent between this object and `er_samples`
+
+```{r modify-er-coldata}
+colData(er_se) <- colData(er_se) %>% 
+  as_tibble(rownames = "accession") %>% 
+  left_join(er_samples) %>% 
+  as("DataFrame")
+```
+
+The use of fixed-width and centred ranges minimises bias which might be between samples with different signal characteristics, but importantly, the counts from these centred ranges as simply our *proxy* for the ranges defined earlier.
+Again, using `colToRanges()` we can place our original set of union peaks back as the `GRanges` element underlying the `RangedSummarizedExperiment`.
+
+```{r reassign-union-peaks}
+rowRanges(er_se) <- rowRanges(er_se) %>% 
+  colToRanges(var = "union_peak") %>% 
+  select(region, starts_with("gene"))
+```
+
+
+### Visualising Data
+
+Now that we've loaded counts, we can explore and visualise them in several ways.
+The first might be to check the count distributions, using `plotAssayDensities()`.
+
+```{r plot-er-dentisites, fig.cap = "Densities of raw counts for all centred regions, using the 'log1p' transformation"}
+plotAssayDensities(er_se, trans = "log1p", colour = "treatment") +
+  scale_colour_manual(values = treat_colours)
+```
+
+We might follow this with a PCA
+
+```{r plot-er-pca, fig.cap = "PCA plot for all ER samples"}
+plotAssayPCA(er_se, trans = "log1p", colour = "treatment", label = "accession") +
+  scale_colour_manual(values = treat_colours)
+```
+
+An important QC metric as an RLE plot which finds the median value across all samples & ranges to identify any samples with consistently higher/lower or divergent signal.
+By way of example, we may wish to normalise out counts using logCPM values for this purpose, so let's perform this step first
+
+```{r plot-er-rle, fig.cap = "RLE plot for all ER samples"}
+assay(er_se, "logCPM") <- cpm(
+  assay(er_se, "counts"), lib.size = er_se$totals, log = TRUE
+)
+plotAssayRle(er_se, assay = "logCPM", fill = "treatment") +
+  geom_hline(yintercept = 0, linetype = 2) +
+  scale_fill_manual(values = treat_colours) 
+```
+
+A problem sometimes faced in ChIP-Seq data which is less prevalent in RNA-Seq data that counts may be drawn from different distributions under different treatments, as DNA-binding is either increased or decreased globally by a treatment.
+We can simply view all samples summarised by treatment group in order to highlight any possible global differences.
+
+```{r plot-er-rle-grouped, fig.cap = "RLE plot for ER samples grouped by treatment."}
+plotAssayRle(er_se, assay = "logCPM", fill = "treatment", by_x = "treatment") +
+  geom_hline(yintercept = 0, linetype = 2) +
+  scale_fill_manual(values = treat_colours) 
+```
+
+### Differential Signal Analysis
+
+Performing Differential Signal Analysis is now simple using `fitAssayDiff()`, which offers two methods of analysis: `method = "qlf"` (default) or `method = "lt"`.
+Respectively, these apply Quasi-Likelihood fits using edgeR [@Lund2012-xo], as is appropriate for count data, or `limma-trend` [@Law2014-xq] if fitting on the log-transformed, (e.g.  `logCPM`) data.
+By default, this will return a `SummarizedExperiment` with results added to the `rowRanged()`/`rowData()` element.
+Alternatively, we can return a `GRanges` object by setting `asRanges = TRUE`
+
+```{r er-initial-fit}
+X <- model.matrix(~treatment, data = colData(er_se))
+er_results <- fitAssayDiff(er_se, design = X, asRanges = TRUE)
+```
+
+The default normalisation is to use Library Size as contained in the `totals` column.
+However, by setting `lib.size = NULL` then `colSums()` will be used if this is considered more suitable.
+Additionally, any of the normalisation methods available in `edgeR::calcNormFactors()` can be applied.
+
+```{r er-tmm}
+er_results <- fitAssayDiff(er_se, design = X, norm = "TMM", asRanges = TRUE)
+```
+
+Finally, a range-based H~0~ [@McCarthy2009-qf] can be applied by provided a fold-change value below which we consider change to be uninteresting, and we can also automatically add Differential Signal status.
+
+```{r er-lambda}
+er_results <- fitAssayDiff(
+  er_se, design = X, norm = "TMM", asRanges = TRUE, fc = 1.2
+) %>% 
+  addDiffStatus()
+arrange(er_results, PValue)
+```
+
+Given these results are in a GRanges object, we can produce an MA-plot using conventional `ggplot2` approaches.
+
+```{r er-plotma, fig.cap = "MA-plot for ERa analysis using fixed-width windows, TMM normalisation and setting 20% as the range beyond which we consider diferential signal to be of interest."}
+status_colours <- c(
+  Undetected = "grey70", Unchanged = "grey30", 
+  Decreased = "blue", Increased = "red"
+)
+er_results %>% 
+  as_tibble() %>% 
+  ggplot(aes(logCPM, logFC)) +
+  geom_point(aes(colour = status)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_colour_manual(values = status_colours)
+```
+
+### Visualising Results
+
+Additionally, we might like to compare Differential Signal Status against the regions we defined earlier and 
+`plotSplitDonut()` is well suited to this.
+A key advanatge of `plotSplitDonut()` is the ability to specify inner and outer palettes separately
+
+```{r plotsplitdonut-default, fig.cap = "Split-Donut plot showing distribution of peaks with diferential signal"}
+er_results %>% 
+  plotSplitDonut(
+    inner = "region", outer = "status",
+    inner_palette = region_colours, outer_palette = status_colours
+  )
+```
+
+Once again, labels are controlled using the `glue` syntax and segments are able to be exploded based on matches to a regular expression
+
+```{r plotsplitdonut-labels, fig.cap = "Split-Donut plot exploding segments with evidence of differential signal, and modifying segment labels"}
+er_results %>% 
+  plotSplitDonut(
+    inner = "region", outer = "status",
+    inner_palette = region_colours, outer_palette = status_colours,
+    inner_glue = "n = {n}", inner_min_p = 0, inner_label_size = 3.5,
+    outer_glue = "{str_wrap(.data[[inner]], 15)}\n{.data[[outer]]}\nn = {n}",
+    outer_min_p = 0, outer_max_p = 0.03,
+    explode_outer = "Increased|Decreased", explode_r = 0.3
+  )
+```
+
+## Using Sliding Windows
+
+`fitAssayDiff()` is agnostic to sliding or fixed-width windows.
+Whilst fixed-width windows are relatively simple conceptually, sliding windows offer other advantages such as being able to manage data where signal comes from genomic regions which are highly variable in width, such as histone marks like H3K27ac.
+Sliding window analysis is well-implemented in `csaw`, however `extraChIPs` offers the additional ability to combine ranges using asymptotically correct *harmonic mean p-value* [@Wilson2019-ln].
+The step of moving from genomic windows to a subset of windows which we can confidently assume contain signal is also able to be managed by `extraChIPs` using `dualFilter()`.
+
+### Defining Windows
+
+### Merging Windows
+
+# Comparing Both Sets Of Results
+
+## Association Between Datasets
+
 
 # References {.unnumbered}
 
