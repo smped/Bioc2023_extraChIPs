@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2023-07-11" />
+<meta name="date" content="2023-07-12" />
 
 <title>Bioc2023: extraChIPs Package Demonstration</title>
 
@@ -201,7 +201,7 @@ function toggle_visibility(id1) {
 <p class="author-name">Stevie Pederson<span class="affil-mark">1,2,3*</span></p>
 <p class="author-affiliation"><span class="affil-mark">1</span>Black Ochre Data Laboratories, Telethon Kids Institute, Adelaide, Australia<br><span class="affil-mark">2</span>Dame Roma Mitchell Cancer Researc Laboratories, University of Adelaide<br><span class="affil-mark">3</span>John Curtin School of Medical Research, Australian National University</p>
 <p class="author-email"><span class="affil-mark">*</span><a href="mailto:stephen.pederson.au@gmail.com">stephen.pederson.au@gmail.com</a></p>
-<h4 class="date">11 July 2023</h4>
+<h4 class="date">12 July 2023</h4>
 <h4 class="abstract">Abstract</h4>
 <p>extraChIPs: Package Demo</p>
 <h4 class="package">Package</h4>
@@ -245,7 +245,8 @@ function toggle_visibility(id1) {
 </ul></li>
 <li><a href="#comparing-both-sets-of-results" id="toc-comparing-both-sets-of-results"><span class="toc-section-number">5</span> Comparing Both Sets Of Results</a>
 <ul>
-<li><a href="#association-between-datasets" id="toc-association-between-datasets"><span class="toc-section-number">5.1</span> Association Between Datasets</a></li>
+<li><a href="#association-between-datasets" id="toc-association-between-datasets"><span class="toc-section-number">5.0.1</span> Association Between Datasets</a></li>
+<li><a href="#regions-in-contex" id="toc-regions-in-contex"><span class="toc-section-number">5.0.2</span> Regions in Contex</a></li>
 </ul></li>
 <li><a href="#references" id="toc-references">References</a></li>
 <li class="appendix"><span><b>Appendix</b></span></li>
@@ -281,7 +282,8 @@ Previous work by the authors of DiffBind <span class="citation">(<a href="#ref-D
 )</code></pre>
 <p>Additional packages required can be installed as follows:</p>
 <pre class="r"><code>pkg &lt;- c(
-  &quot;rtracklayer&quot;, &quot;tidyverse&quot;, &quot;glue&quot;, &quot;plyranges&quot;, &quot;Rsamtools&quot;, &quot;csaw&quot;, &quot;edgeR&quot;
+  &quot;rtracklayer&quot;, &quot;tidyverse&quot;, &quot;glue&quot;, &quot;plyranges&quot;, &quot;Rsamtools&quot;, &quot;csaw&quot;, &quot;edgeR&quot;,
+  &quot;patchwork&quot;
 )
 BiocManager::install(pkgs = pkg, update = FALSE, ask = FALSE)</code></pre>
 <pre class="r"><code>library(tidyverse)
@@ -292,6 +294,7 @@ library(Rsamtools)
 library(csaw)
 library(edgeR)
 library(rtracklayer)
+library(patchwork)
 theme_set(theme_bw())</code></pre>
 <p>Data can be obtained from <a href="">here</a> and should be placed in a folder called <code>data</code> within your current working directory.
 This data has been preprocessed <a href="https://github.com/smped/PRJNA509779">here</a> using the prepareChIPs workflow <span class="citation">(<a href="#ref-pederson_2023">Pederson 2023</a>)</span>, and subset to a region on Chromosome 10 for easier working in today’s context.</p>
@@ -445,7 +448,19 @@ If importing <code>narrowPeak</code> files, the peak centre can be automatically
 peaks &lt;- importPeaks(fl, seqinfo = sq, centre = TRUE)
 names(peaks) &lt;- str_remove_all(names(peaks), &quot;_peaks.narrowPeak&quot;)</code></pre>
 <p>(Names can also be set using <code>glue</code> syntax, however the above is generally more easily comprehended at first glance.)</p>
-<p>One of the first tasks is usually to check how similar our replicates are, which is easily performed using <code>plotOverlaps()</code></p>
+<p>Blacklisted regions and greylisted regions are also able to be applied during import.
+Blacklisted regions are usually available from <a href="https://github.com/Boyle-Lab/Blacklist/tree/master/lists">public sources</a>, whilst grey-listed regions are derived from a relevant input.</p>
+<p>These have also been provided and can be loaded separaetly then combined.</p>
+<pre class="r"><code>bg_list &lt;- c(&quot;data/chr10_blacklist.bed&quot;, &quot;data/chr10_greylist.bed&quot;) %&gt;% 
+  lapply(import.bed, seqinfo = sq) %&gt;% 
+  lapply(granges) %&gt;% 
+  GRangesList() %&gt;% 
+  unlist() %&gt;% 
+  sort()
+peaks &lt;- importPeaks(fl, seqinfo = sq, centre = TRUE, blacklist = bg_list)
+names(peaks) &lt;- str_remove_all(names(peaks), &quot;_peaks.narrowPeak&quot;)</code></pre>
+<p>Now we’ve loaded our peaks and excluded peaks within unreliable ranges, one of the first tasks might be to check how similar our replicates are.
+This can easily be performed using <code>plotOverlaps()</code></p>
 <pre class="r"><code>plotOverlaps(peaks, set_col = treat_colours[er_samples$treatment])</code></pre>
 <div class="figure"><span style="display:block;" id="fig:plot-overlaps"></span>
 <img src="index_files/figure-html/plot-overlaps-1.png" alt="Overlapping peaks between all replicates" width="100%" />
@@ -470,7 +485,7 @@ Figure 2: <span class="caption-title">Overlapping peaks, showing only intersecti
 <p>The next step might be to form a set of consensus peaks for each treatment.
 Just forming a set of consensus peaks for the E2 samples can be done manually</p>
 <pre class="r"><code>makeConsensus(peaks[1:3])</code></pre>
-<pre><code>## GRanges object with 247 ranges and 4 metadata columns:
+<pre><code>## GRanges object with 244 ranges and 4 metadata columns:
 ##         seqnames            ranges strand | SRR8315180 SRR8315181 SRR8315182
 ##            &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |  &lt;logical&gt;  &lt;logical&gt;  &lt;logical&gt;
 ##     [1]    chr10 43048195-43048529      * |       TRUE       TRUE       TRUE
@@ -479,11 +494,11 @@ Just forming a set of consensus peaks for the E2 samples can be done manually</p
 ##     [4]    chr10 43606238-43606573      * |       TRUE       TRUE       TRUE
 ##     [5]    chr10 43851214-43851989      * |      FALSE       TRUE       TRUE
 ##     ...      ...               ...    ... .        ...        ...        ...
-##   [243]    chr10 99168353-99168649      * |       TRUE       TRUE       TRUE
-##   [244]    chr10 99207868-99208156      * |      FALSE       TRUE       TRUE
-##   [245]    chr10 99326100-99326363      * |      FALSE      FALSE       TRUE
-##   [246]    chr10 99331363-99331730      * |       TRUE       TRUE       TRUE
-##   [247]    chr10 99621632-99621961      * |      FALSE       TRUE       TRUE
+##   [240]    chr10 99168353-99168649      * |       TRUE       TRUE       TRUE
+##   [241]    chr10 99207868-99208156      * |      FALSE       TRUE       TRUE
+##   [242]    chr10 99326100-99326363      * |      FALSE      FALSE       TRUE
+##   [243]    chr10 99331363-99331730      * |       TRUE       TRUE       TRUE
+##   [244]    chr10 99621632-99621961      * |      FALSE       TRUE       TRUE
 ##                 n
 ##         &lt;numeric&gt;
 ##     [1]         3
@@ -492,17 +507,17 @@ Just forming a set of consensus peaks for the E2 samples can be done manually</p
 ##     [4]         3
 ##     [5]         2
 ##     ...       ...
+##   [240]         3
+##   [241]         2
+##   [242]         1
 ##   [243]         3
 ##   [244]         2
-##   [245]         1
-##   [246]         3
-##   [247]         2
 ##   -------
 ##   seqinfo: 1 sequence from hg19 genome</code></pre>
 <p>In reality, we may prefer to only retain peaks found in 2/3 samples and we can do this by setting <code>p = 2/3</code>.
 We can also also <code>makeConsensus</code> to retain one or more columns from the original peaks using <code>var =</code></p>
 <pre class="r"><code>makeConsensus(peaks[1:3], p = 2/3, var = &quot;centre&quot;)</code></pre>
-<pre><code>## GRanges object with 167 ranges and 5 metadata columns:
+<pre><code>## GRanges object with 164 ranges and 5 metadata columns:
 ##         seqnames            ranges strand |                     centre
 ##            &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |              &lt;NumericList&gt;
 ##     [1]    chr10 43048195-43048529      * | 43048341,43048357,43048389
@@ -511,11 +526,11 @@ We can also also <code>makeConsensus</code> to retain one or more columns from t
 ##     [4]    chr10 43606238-43606573      * | 43606418,43606408,43606421
 ##     [5]    chr10 43851214-43851989      * |          43851672,43851766
 ##     ...      ...               ...    ... .                        ...
-##   [163]    chr10 99096784-99097428      * | 99097259,99097253,99097249
-##   [164]    chr10 99168353-99168649      * | 99168506,99168486,99168513
-##   [165]    chr10 99207868-99208156      * |          99207995,99208002
-##   [166]    chr10 99331363-99331730      * | 99331621,99331585,99331580
-##   [167]    chr10 99621632-99621961      * |          99621809,99621828
+##   [160]    chr10 99096784-99097428      * | 99097259,99097253,99097249
+##   [161]    chr10 99168353-99168649      * | 99168506,99168486,99168513
+##   [162]    chr10 99207868-99208156      * |          99207995,99208002
+##   [163]    chr10 99331363-99331730      * | 99331621,99331585,99331580
+##   [164]    chr10 99621632-99621961      * |          99621809,99621828
 ##         SRR8315180 SRR8315181 SRR8315182         n
 ##          &lt;logical&gt;  &lt;logical&gt;  &lt;logical&gt; &lt;numeric&gt;
 ##     [1]       TRUE       TRUE       TRUE         3
@@ -524,18 +539,18 @@ We can also also <code>makeConsensus</code> to retain one or more columns from t
 ##     [4]       TRUE       TRUE       TRUE         3
 ##     [5]      FALSE       TRUE       TRUE         2
 ##     ...        ...        ...        ...       ...
+##   [160]       TRUE       TRUE       TRUE         3
+##   [161]       TRUE       TRUE       TRUE         3
+##   [162]      FALSE       TRUE       TRUE         2
 ##   [163]       TRUE       TRUE       TRUE         3
-##   [164]       TRUE       TRUE       TRUE         3
-##   [165]      FALSE       TRUE       TRUE         2
-##   [166]       TRUE       TRUE       TRUE         3
-##   [167]      FALSE       TRUE       TRUE         2
+##   [164]      FALSE       TRUE       TRUE         2
 ##   -------
 ##   seqinfo: 1 sequence from hg19 genome</code></pre>
 <p>By default, this takes the union of the ranges called as peaks in each sample.
 We may instead prefer to just retain regions <em>covered</em> in <span class="math inline">\(\geq\)</span> 2/3 samples.
 Not that whilst we have the same number of ranges here, the ranges are tighter.</p>
 <pre class="r"><code>makeConsensus(peaks[1:3], p = 2/3, method = &quot;coverage&quot;)</code></pre>
-<pre><code>## GRanges object with 167 ranges and 4 metadata columns:
+<pre><code>## GRanges object with 164 ranges and 4 metadata columns:
 ##         seqnames            ranges strand | SRR8315180 SRR8315181 SRR8315182
 ##            &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |  &lt;logical&gt;  &lt;logical&gt;  &lt;logical&gt;
 ##     [1]    chr10 43048224-43048519      * |       TRUE       TRUE       TRUE
@@ -544,11 +559,11 @@ Not that whilst we have the same number of ranges here, the ranges are tighter.<
 ##     [4]    chr10 43606264-43606559      * |       TRUE       TRUE       TRUE
 ##     [5]    chr10 43851570-43851940      * |      FALSE       TRUE       TRUE
 ##     ...      ...               ...    ... .        ...        ...        ...
-##   [163]    chr10 99097038-99097398      * |       TRUE       TRUE       TRUE
-##   [164]    chr10 99168367-99168608      * |       TRUE       TRUE       TRUE
-##   [165]    chr10 99207908-99208139      * |      FALSE       TRUE       TRUE
-##   [166]    chr10 99331412-99331687      * |       TRUE       TRUE       TRUE
-##   [167]    chr10 99621674-99621944      * |      FALSE       TRUE       TRUE
+##   [160]    chr10 99097038-99097398      * |       TRUE       TRUE       TRUE
+##   [161]    chr10 99168367-99168608      * |       TRUE       TRUE       TRUE
+##   [162]    chr10 99207908-99208139      * |      FALSE       TRUE       TRUE
+##   [163]    chr10 99331412-99331687      * |       TRUE       TRUE       TRUE
+##   [164]    chr10 99621674-99621944      * |      FALSE       TRUE       TRUE
 ##                 n
 ##         &lt;numeric&gt;
 ##     [1]         3
@@ -557,11 +572,11 @@ Not that whilst we have the same number of ranges here, the ranges are tighter.<
 ##     [4]         3
 ##     [5]         2
 ##     ...       ...
+##   [160]         3
+##   [161]         3
+##   [162]         2
 ##   [163]         3
-##   [164]         3
-##   [165]         2
-##   [166]         3
-##   [167]         2
+##   [164]         2
 ##   -------
 ##   seqinfo: 1 sequence from hg19 genome</code></pre>
 <p>In order to make consensus peaks for each condition, we can split by treatment group, then use a simple <code>lapply()</code> trick, to work wth both treatment groups together.</p>
@@ -683,7 +698,7 @@ regions</code></pre>
 <p>Now we can assign these to the peaks using <code>bestOverlap</code></p>
 <pre class="r"><code>union_peaks$region &lt;- bestOverlap(union_peaks, regions)
 union_peaks</code></pre>
-<pre><code>## GRanges object with 191 ranges and 5 metadata columns:
+<pre><code>## GRanges object with 188 ranges and 5 metadata columns:
 ##         seqnames            ranges strand |    centre        E2     E2DHT
 ##            &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;numeric&gt; &lt;logical&gt; &lt;logical&gt;
 ##     [1]    chr10 43048195-43048529      * |  43048372      TRUE      TRUE
@@ -692,11 +707,11 @@ union_peaks</code></pre>
 ##     [4]    chr10 43606184-43606573      * |  43606417      TRUE      TRUE
 ##     [5]    chr10 43851214-43851989      * |  43851719      TRUE     FALSE
 ##     ...      ...               ...    ... .       ...       ...       ...
-##   [187]    chr10 99168349-99168690      * |  99168489      TRUE      TRUE
-##   [188]    chr10 99207862-99208157      * |  99208004      TRUE      TRUE
-##   [189]    chr10 99331323-99331741      * |  99331592      TRUE      TRUE
-##   [190]    chr10 99340107-99340354      * |  99340248     FALSE      TRUE
-##   [191]    chr10 99621632-99621988      * |  99621798      TRUE      TRUE
+##   [184]    chr10 99168349-99168690      * |  99168489      TRUE      TRUE
+##   [185]    chr10 99207862-99208157      * |  99208004      TRUE      TRUE
+##   [186]    chr10 99331323-99331741      * |  99331592      TRUE      TRUE
+##   [187]    chr10 99340107-99340354      * |  99340248     FALSE      TRUE
+##   [188]    chr10 99621632-99621988      * |  99621798      TRUE      TRUE
 ##                 n              region
 ##         &lt;numeric&gt;         &lt;character&gt;
 ##     [1]         2            promoter
@@ -705,18 +720,18 @@ union_peaks</code></pre>
 ##     [4]         2              intron
 ##     [5]         1 proximal_intergenic
 ##     ...       ...                 ...
-##   [187]         2              intron
-##   [188]         2            promoter
-##   [189]         2            promoter
-##   [190]         1   upstream_promoter
-##   [191]         2   upstream_promoter
+##   [184]         2              intron
+##   [185]         2            promoter
+##   [186]         2            promoter
+##   [187]         1   upstream_promoter
+##   [188]         2   upstream_promoter
 ##   -------
 ##   seqinfo: 1 sequence from hg19 genome</code></pre>
 <p>When providing a <code>GRangesList</code> the overlaps are defined by the element names.
 Alternatively, we could pass a <code>GRanges</code> object and specify the name from the <code>mcols</code> element we wish to us.</p>
 <pre class="r"><code>union_peaks$region &lt;- bestOverlap(union_peaks, unlist(regions), var = &quot;region&quot;)
 union_peaks</code></pre>
-<pre><code>## GRanges object with 191 ranges and 5 metadata columns:
+<pre><code>## GRanges object with 188 ranges and 5 metadata columns:
 ##         seqnames            ranges strand |    centre        E2     E2DHT
 ##            &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;numeric&gt; &lt;logical&gt; &lt;logical&gt;
 ##     [1]    chr10 43048195-43048529      * |  43048372      TRUE      TRUE
@@ -725,11 +740,11 @@ union_peaks</code></pre>
 ##     [4]    chr10 43606184-43606573      * |  43606417      TRUE      TRUE
 ##     [5]    chr10 43851214-43851989      * |  43851719      TRUE     FALSE
 ##     ...      ...               ...    ... .       ...       ...       ...
-##   [187]    chr10 99168349-99168690      * |  99168489      TRUE      TRUE
-##   [188]    chr10 99207862-99208157      * |  99208004      TRUE      TRUE
-##   [189]    chr10 99331323-99331741      * |  99331592      TRUE      TRUE
-##   [190]    chr10 99340107-99340354      * |  99340248     FALSE      TRUE
-##   [191]    chr10 99621632-99621988      * |  99621798      TRUE      TRUE
+##   [184]    chr10 99168349-99168690      * |  99168489      TRUE      TRUE
+##   [185]    chr10 99207862-99208157      * |  99208004      TRUE      TRUE
+##   [186]    chr10 99331323-99331741      * |  99331592      TRUE      TRUE
+##   [187]    chr10 99340107-99340354      * |  99340248     FALSE      TRUE
+##   [188]    chr10 99621632-99621988      * |  99621798      TRUE      TRUE
 ##                 n                 region
 ##         &lt;numeric&gt;            &lt;character&gt;
 ##     [1]         2  Promoter (-2500/+500)
@@ -738,11 +753,11 @@ union_peaks</code></pre>
 ##     [4]         2                 Intron
 ##     [5]         1     Intergenic (&lt;10kb)
 ##     ...       ...                    ...
-##   [187]         2                 Intron
-##   [188]         2  Promoter (-2500/+500)
-##   [189]         2  Promoter (-2500/+500)
-##   [190]         1 Upstream Promoter (-..
-##   [191]         2 Upstream Promoter (-..
+##   [184]         2                 Intron
+##   [185]         2  Promoter (-2500/+500)
+##   [186]         2  Promoter (-2500/+500)
+##   [187]         1 Upstream Promoter (-..
+##   [188]         2 Upstream Promoter (-..
 ##   -------
 ##   seqinfo: 1 sequence from hg19 genome</code></pre>
 <p>Let’s set these as a factor in order as contained in the original set of regions.</p>
@@ -841,7 +856,7 @@ er_se &lt;- regionCounts(er_bfl, centred_peaks, ext = 200)
 seqinfo(er_se) &lt;- sq
 er_se</code></pre>
 <pre><code>## class: RangedSummarizedExperiment 
-## dim: 191 6 
+## dim: 188 6 
 ## metadata(2): final.ext param
 ## assays(1): counts
 ## rownames: NULL
@@ -934,7 +949,7 @@ Additionally, any of the normalisation methods available in <code>edgeR::calcNor
 ) %&gt;% 
   addDiffStatus()
 arrange(er_results, PValue)</code></pre>
-<pre><code>## GRanges object with 191 ranges and 8 metadata columns:
+<pre><code>## GRanges object with 188 ranges and 8 metadata columns:
 ##         seqnames            ranges strand |                   region
 ##            &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |                 &lt;factor&gt;
 ##     [1]    chr10 81101906-81102928      * | Upstream Promoter (-5kb)
@@ -943,11 +958,11 @@ arrange(er_results, PValue)</code></pre>
 ##     [4]    chr10 52233596-52233998      * | Exon                    
 ##     [5]    chr10 51547205-51547782      * | Promoter (-2500/+500)   
 ##     ...      ...               ...    ... .                      ...
-##   [187]    chr10 71344398-71344749      * |    Intergenic (&lt;10kb)   
-##   [188]    chr10 76586249-76586887      * |    Promoter (-2500/+500)
-##   [189]    chr10 93882729-93883168      * |    Intron               
-##   [190]    chr10 64605136-64605347      * |    Intron               
-##   [191]    chr10 82725993-82726916      * |    Intergenic (&gt;10kb)   
+##   [184]    chr10 93882729-93883168      * |    Intron               
+##   [185]    chr10 71344398-71344749      * |    Intergenic (&lt;10kb)   
+##   [186]    chr10 76586249-76586887      * |    Promoter (-2500/+500)
+##   [187]    chr10 82725993-82726916      * |    Intergenic (&gt;10kb)   
+##   [188]    chr10 64605136-64605347      * |    Intron               
 ##                                            gene_id
 ##                                             &lt;list&gt;
 ##     [1]                       ENSG00000108179.14_6
@@ -956,37 +971,37 @@ arrange(er_results, PValue)</code></pre>
 ##     [4] ENSG00000198964.14_10,ENSG00000225303.2_10
 ##     [5]                        ENSG00000263639.7_7
 ##     ...                                        ...
-##   [187]                        ENSG00000230755.1_6
-##   [188]  ENSG00000272748.1_8,ENSG00000156650.14_17
-##   [189]                      ENSG00000107864.15_12
-##   [190]                        ENSG00000289487.1_1
-##   [191]                        ENSG00000227209.1_5
+##   [184]                      ENSG00000107864.15_12
+##   [185]                        ENSG00000230755.1_6
+##   [186]  ENSG00000272748.1_8,ENSG00000156650.14_17
+##   [187]                        ENSG00000227209.1_5
+##   [188]                        ENSG00000289487.1_1
 ##                               gene_name       logFC    logCPM      PValue
 ##                                  &lt;list&gt;   &lt;numeric&gt; &lt;numeric&gt;   &lt;numeric&gt;
-##     [1]                            PPIF    1.888949   8.02947 2.67063e-11
-##     [2]                            DLG5    0.968534   8.23147 3.45888e-06
-##     [3] ENSG00000225913,ENSG00000196566    1.711803   6.20468 9.03805e-06
-##     [4]           SGMS1,ENSG00000225303    1.128446   6.70371 2.01803e-04
-##     [5]                            MSMB    0.665459   7.44225 1.11895e-03
+##     [1]                            PPIF    1.887377   8.02941 6.00421e-11
+##     [2]                            DLG5    0.966791   8.23125 4.13714e-06
+##     [3] ENSG00000225913,ENSG00000196566    1.712374   6.20441 1.00877e-05
+##     [4]           SGMS1,ENSG00000225303    1.129786   6.70351 2.34471e-04
+##     [5]                            MSMB    0.664784   7.44213 1.13493e-03
 ##     ...                             ...         ...       ...         ...
-##   [187]                       MTATP6P23 -0.00658561   6.77482    0.981275
-##   [188]           ENSG00000272748,KAT6B -0.00910715   8.12102    0.987439
-##   [189]                           CPEB3 -0.00414904   6.40010    0.987870
-##   [190]                 ENSG00000289487  0.00270370   5.96825    0.993668
-##   [191]                         WARS2P1 -0.00255381   9.43981    0.994944
+##   [184]                           CPEB3 -0.00513719   6.39992    0.985018
+##   [185]                       MTATP6P23 -0.00519869   6.77464    0.985285
+##   [186]           ENSG00000272748,KAT6B -0.00909379   8.12097    0.985618
+##   [187]                         WARS2P1 -0.00371918   9.43978    0.994243
+##   [188]                 ENSG00000289487  0.00109980   5.96820    0.997631
 ##                 FDR    status
 ##           &lt;numeric&gt;  &lt;factor&gt;
-##     [1] 5.10091e-09 Increased
-##     [2] 3.30323e-04 Increased
-##     [3] 5.75422e-04 Increased
-##     [4] 9.63609e-03 Increased
-##     [5] 4.25520e-02 Increased
+##     [1] 1.12879e-08 Increased
+##     [2] 3.88891e-04 Increased
+##     [3] 6.32163e-04 Increased
+##     [4] 1.10201e-02 Increased
+##     [5] 4.26732e-02 Increased
 ##     ...         ...       ...
-##   [187]    0.994944 Unchanged
-##   [188]    0.994944 Unchanged
-##   [189]    0.994944 Unchanged
-##   [190]    0.994944 Unchanged
-##   [191]    0.994944 Unchanged
+##   [184]    0.996217 Unchanged
+##   [185]    0.996217 Unchanged
+##   [186]    0.996217 Unchanged
+##   [187]    0.997631 Unchanged
+##   [188]    0.997631 Unchanged
 ##   -------
 ##   seqinfo: 1 sequence from hg19 genome</code></pre>
 <p>Given these results are in a GRanges object, we can produce an MA-plot using conventional <code>ggplot2</code> approaches.</p>
@@ -1047,18 +1062,249 @@ Figure 12: <span class="caption-title">Split-Donut plot exploding segments with 
 Whilst fixed-width windows are relatively simple conceptually, sliding windows offer other advantages such as being able to manage data where signal comes from genomic regions which are highly variable in width, such as histone marks like H3K27ac.
 Sliding window analysis is well-implemented in <code>csaw</code>, however <code>extraChIPs</code> offers the additional ability to combine ranges using asymptotically correct <em>harmonic mean p-value</em> <span class="citation">(<a href="#ref-Wilson2019-ln">Wilson 2019</a>)</span>.
 The step of moving from genomic windows to a subset of windows which we can confidently assume contain signal is also able to be managed by <code>extraChIPs</code> using <code>dualFilter()</code>.</p>
+<p>For this section of the analysis, we’ll use data for the histone mark H3K27ac from the same cell type under the same two conditions (E2 + E2DHT).
+A new sample metadata sheet can be formed using the following, and we’ll immediately for the BamFileList for reading in counts.</p>
+<pre class="r"><code>h3k_samples &lt;- tibble(
+  accession = paste0(&quot;SRR83151&quot;, seq(86, 91)),
+  target = &quot;H3K27ac&quot;,
+  treatment = c(factor(rep(treat_levels, each = 3), levels = treat_levels))
+) %&gt;% 
+  bind_rows(
+    tibble(accession = &quot;SRR8315192&quot;, target = &quot;Input&quot;)
+  )
+h3k_bfl &lt;- BamFileList(glue(&quot;data/{h3k_samples$accession}.bam&quot;))
+names(h3k_bfl) &lt;- h3k_samples$accession</code></pre>
 <div id="defining-windows" class="section level3" number="4.2.1">
 <h3><span class="header-section-number">4.2.1</span> Defining Windows</h3>
+<p>Given we’re going to use sliding windows, we can use a smaller window size and need to set a step-size for ‘sliding’ along the genome.
+Whilst there are no hard and fast rules, for a histone marks, window sizes of 150bp sliding in steps of 50bp may be a good choice.</p>
+<pre class="r"><code>win_size &lt;- 150
+win_step &lt;- 50</code></pre>
+<p>The example dataset for today can be easily managed on a laptop, however, it should be noted that for a full-scale dataset, large amounts of RAM are required, and this process may take considerable time.
+In the following we define some key parameters for passing to <code>csaw::windowCounts()</code>, where we restrict counting to <code>chr10</code>, provide out black and grey-lists and let the function know that these are all single-end reads.</p>
+<p>From there, we perform the counts using the window step &amp; size as defined above, extending each read to represent a full DNA fragment of 200nt, and discarding any regions with fewer than 1 read/sample.</p>
+<pre class="r"><code>rp &lt;- readParam(pe = &quot;none&quot;, restrict = &quot;chr10&quot;, discard = bg_list)
+wincounts &lt;- windowCounts(
+  bam.files = h3k_bfl,
+  spacing = win_step, width = win_size, ext = 200,
+  filter = length(h3k_bfl),
+  param = rp
+)
+seqlevels(wincounts) &lt;- seqlevels(sq)
+seqinfo(wincounts) &lt;- sq
+dim(wincounts)</code></pre>
+<pre><code>## [1] 467904      7</code></pre>
+<p>Many of these windows will have counted reads which are essentially background noise, and we wish to exclude these and only retain those which confidently contain signal from our ChIP target.
+<code>extraChIPs</code> provides a function <code>dualFilter()</code> in which a set of guide ranges can be provided where signal is expected.
+Thresholds for minimum overall signal, and signal relative to input are set based on retaining a give proportion of reads which overlap these ranges, with lower numbers returning more stringently selected ranges.</p>
+<p>A set of guide ranges has been prepared following a similar process to forming union peaks above for ER<span class="math inline">\(\alpha\)</span>, and can be loaded then passed to <code>dualFilter()</code>.
+Again, this dataset is easily handled on a laptop, whilst for a complete genome, considerable amounts of RAM will be required.</p>
+<pre class="r"><code>guide_ranges &lt;- import.bed(&quot;data/H3K27ac_chr10.bed&quot;, seqinfo = sq)
+filtcounts &lt;- dualFilter(
+  x = wincounts[,dplyr::filter(h3k_samples, target == &quot;H3K27ac&quot;)$accession],
+  bg  =  wincounts[,dplyr::filter(h3k_samples, target == &quot;Input&quot;)$accession],
+  ref = guide_ranges, q = 0.6
+)
+colData(filtcounts) &lt;- colData(filtcounts) %&gt;% 
+  as_tibble(rownames = &quot;accession&quot;) %&gt;% 
+  left_join(h3k_samples) %&gt;% 
+  as(&quot;DataFrame&quot;)
+dim(filtcounts)</code></pre>
+<pre><code>## [1] 19017     6</code></pre>
+<p>By default, an additional assay <code>logCPM</code> will be added during this step and this can also be used for QC.</p>
+<pre class="r"><code>A &lt;- plotAssayDensities(filtcounts, assay = &quot;logCPM&quot;, colour = &quot;treatment&quot;) + 
+  scale_colour_manual(values = treat_colours)
+B &lt;- plotAssayPCA(filtcounts, assay = &quot;logCPM&quot;, colour = &quot;treatment&quot;, label = &quot;accession&quot;) +
+  scale_colour_manual(values = treat_colours)
+A + B + plot_layout(guides = &quot;collect&quot;) + plot_annotation(tag_levels = &quot;A&quot;) </code></pre>
+<div class="figure"><span style="display:block;" id="fig:plot-filt-assays"></span>
+<img src="index_files/figure-html/plot-filt-assays-1.png" alt="A) Density plot and B) PCA based on logCPM values from the sliding windows retained after filtering." width="100%" />
+<p class="caption">
+Figure 13: <span class="caption-title">A) Density plot and B) PCA based on logCPM values from the sliding windows retained after filtering</span><br>
+</p>
+</div>
+<p>Now we can pass our filtered windows to <code>fitAssayDiff()</code> as we did previously, however, once we have performed statistical testing on each window, we need to merge windows to obtain our final results.</p>
+<pre class="r"><code>X &lt;- model.matrix(~treatment, data = colData(filtcounts))
+h3k_all &lt;- fitAssayDiff(filtcounts, norm = &quot;TMM&quot;, design = X, asRanges = TRUE)</code></pre>
+<p>Although we haven’t declared in regions as showing differential signal, we can still inspect an MA plot for any unexpected issues in our data</p>
+<pre class="r"><code>h3k_all %&gt;% 
+  as_tibble() %&gt;% 
+  ggplot(aes(logCPM, logFC)) +
+  geom_point() +
+  geom_smooth(se = FALSE)</code></pre>
+<div class="figure"><span style="display:block;" id="fig:plotma-h3k"></span>
+<img src="index_files/figure-html/plotma-h3k-1.png" alt="MA plot using all sliding windows retained after the initial filtering step." width="100%" />
+<p class="caption">
+Figure 14: <span class="caption-title">MA plot using all sliding windows retained after the initial filtering step</span><br>
+</p>
+</div>
+<p>As expected with H3K27ac signal, the total amount of signal obtained under two related conditions is similar and we have a nicely centred plot.</p>
 </div>
 <div id="merging-windows" class="section level3" number="4.2.2">
 <h3><span class="header-section-number">4.2.2</span> Merging Windows</h3>
+<p>Now we can merge overlapping windows to obtain our final results.
+Using <code>extraChIPs</code> this can be performed using all methods offered by <code>csaw</code>, (<code>?mergeByCol</code> and <code>?mergeBySig</code>) as well as using the asymptotically-exact harmonic mean p-value, which we’ll use here.</p>
+<pre class="r"><code>h3k_results &lt;- mergeByHMP(h3k_all, min_win = 2) %&gt;% 
+  addDiffStatus()
+h3k_results</code></pre>
+<pre><code>## GRanges object with 701 ranges and 9 metadata columns:
+##         seqnames            ranges strand | n_windows      n_up    n_down
+##            &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;
+##     [1]    chr10 42862951-42863350      * |         6         5         0
+##     [2]    chr10 43047801-43048200      * |         6         0         3
+##     [3]    chr10 43048401-43048800      * |         6         0         3
+##     [4]    chr10 43132901-43134800      * |        36        13        16
+##     [5]    chr10 43135701-43137250      * |        29         7         3
+##     ...      ...               ...    ... .       ...       ...       ...
+##   [697]    chr10 99473501-99474250      * |        13         0         5
+##   [698]    chr10 99496401-99497850      * |        27         9        18
+##   [699]    chr10 99608301-99610050      * |        32         0         8
+##   [700]    chr10 99628751-99629400      * |        11         2         6
+##   [701]    chr10 99894101-99895400      * |        24         4        13
+##                    keyval_range    logCPM      logFC       hmp   hmp_fdr
+##                       &lt;GRanges&gt; &lt;numeric&gt;  &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+##     [1] chr10:42863051-42863200   6.31662  0.3345653 0.4041174  0.997968
+##     [2] chr10:43048001-43048150   6.16996 -0.0780895 0.8764236  0.997968
+##     [3] chr10:43048601-43048750   6.31199 -0.2619553 0.6083939  0.997968
+##     [4] chr10:43134251-43134400   7.67436  0.1350775 0.5145484  0.997968
+##     [5] chr10:43137101-43137250   6.87832  0.0791231 0.0119809  0.123509
+##     ...                     ...       ...        ...       ...       ...
+##   [697] chr10:99473851-99474000   6.43974 -0.4427309 0.2576771  0.802408
+##   [698] chr10:99497701-99497850   7.41777  0.0551099 0.9923554  0.997968
+##   [699] chr10:99608601-99608750   7.10450 -0.5008959 0.0309346  0.238069
+##   [700] chr10:99628851-99629000   6.63987 -0.2298606 0.6588732  0.997968
+##   [701] chr10:99895051-99895200   8.08365 -0.1143540 0.6362419  0.997968
+##            status
+##          &lt;factor&gt;
+##     [1] Unchanged
+##     [2] Unchanged
+##     [3] Unchanged
+##     [4] Unchanged
+##     [5] Unchanged
+##     ...       ...
+##   [697] Unchanged
+##   [698] Unchanged
+##   [699] Unchanged
+##   [700] Unchanged
+##   [701] Unchanged
+##   -------
+##   seqinfo: 1 sequence from hg19 genome</code></pre>
+<p>Notice that we have additional columns not returned when using fixed-width windows.
+The first three indicate how many original windows were merged, along with how many may have been individually considered as showing differential signal in either direction.
+Next to these is the column <code>keyval_range</code> which indicates the original window which returned the lowest p-value.
+Given the harmonic men involves summing the inverse of raw p-values, these are considered to be weights and the returned values for logCPM and logFC are weighted averages, using <span class="math inline">\(w_i = \frac{1}{p_i}\)</span> as weights for each windows <span class="math inline">\(i\)</span>.
+Given this, any MA-plots may appear to show bias, which is in fact due to the weighting strategy used here.
+As such the previous figure using all windows prior to merging is the best strategy for identifying any issues with the data</p>
+<pre class="r"><code>h3k_results %&gt;% 
+  as_tibble() %&gt;% 
+  ggplot(aes(logCPM, logFC)) +
+  geom_point(aes(colour = status), alpha = 0.7) +
+  geom_smooth(method = &quot;lm&quot;, se = FALSE) +
+  scale_colour_manual(values = status_colours)</code></pre>
+<div class="figure"><span style="display:block;" id="fig:plotma-merged-h3k"></span>
+<img src="index_files/figure-html/plotma-merged-h3k-1.png" alt="MA plot showing results after merging overlapping windows." width="100%" />
+<p class="caption">
+Figure 15: <span class="caption-title">MA plot showing results after merging overlapping windows</span><br>
+</p>
+</div>
 </div>
 </div>
 </div>
 <div id="comparing-both-sets-of-results" class="section level1" number="5">
 <h1><span class="header-section-number">5</span> Comparing Both Sets Of Results</h1>
-<div id="association-between-datasets" class="section level2" number="5.1">
-<h2><span class="header-section-number">5.1</span> Association Between Datasets</h2>
+<pre class="r"><code>h3k_results &lt;- h3k_results %&gt;% 
+  select(logCPM, logFC, PValue = hmp, FDR = hmp_fdr, status) %&gt;% 
+  mutate(region = bestOverlap(., unlist(regions), var = &quot;region&quot;)) %&gt;% 
+  mapByFeature(genes = gtf$gene, prom = regions$promoter)
+both_results &lt;- GRangesList(ER = er_results, H3K27ac = h3k_results) </code></pre>
+<pre class="r"><code>plotPairwise(both_results, var = &quot;logCPM&quot;)</code></pre>
+<div class="figure"><span style="display:block;" id="fig:plot-pairwise-logcpm"></span>
+<img src="index_files/figure-html/plot-pairwise-logcpm-1.png" alt="Comparison of logCPM values when both targets are detected, with boxplots showing the range of values when each target was detected alone, or when both were detected together" width="100%" />
+<p class="caption">
+Figure 16: <span class="caption-title">Comparison of logCPM values when both targets are detected, with boxplots showing the range of values when each target was detected alone, or when both were detected together</span><br>
+</p>
+</div>
+<pre class="r"><code>plotPairwise(
+  both_results, var = &quot;logFC&quot;, colour = &quot;status&quot;, label = &quot;gene_name&quot;
+) +
+  scale_colour_brewer(palette = &quot;Set1&quot;, direction = -1)</code></pre>
+<div class="figure"><span style="display:block;" id="fig:plot-pairwise-logFC"></span>
+<img src="index_files/figure-html/plot-pairwise-logFC-1.png" alt="Comparison of logFC values when both targets are detcted, with boxplots showing the range of values when only one target is detected, or when both are detected" width="100%" />
+<p class="caption">
+Figure 17: <span class="caption-title">Comparison of logFC values when both targets are detcted, with boxplots showing the range of values when only one target is detected, or when both are detected</span><br>
+</p>
+</div>
+<pre class="r"><code>both_results %&gt;% 
+  mapGrlCols(var = &quot;status&quot;) %&gt;% 
+  as_tibble() %&gt;% 
+  dplyr::filter(!if_any(ends_with(&quot;status&quot;), is.na)) %&gt;% 
+  dplyr::rename_with(\(x) str_remove_all(x, &quot;_status&quot;)) %&gt;% 
+  plotSplitDonut(
+    inner = &quot;H3K27ac&quot;, outer = &quot;ER&quot;,
+    inner_palette = status_colours, outer_palette = status_colours,
+    inner_glue = &quot;{inner}\n{.data[[inner]]}\n{n}&quot;,
+    outer_glue = &quot;{outer}\n{.data[[outer]]}\n{n}&quot;,
+    label_alpha = 0.8, min_p = 0.02,
+    explode_inner = &quot;Increased&quot;, explode_outer = &quot;Increased&quot;, 
+    explode_query = &quot;AND&quot;, explode_r = 0.3
+  )</code></pre>
+<div class="figure"><span style="display:block;" id="fig:plot-status-donut"></span>
+<img src="index_files/figure-html/plot-status-donut-1.png" alt="Combined status when both targets are detected together" width="100%" />
+<p class="caption">
+Figure 18: <span class="caption-title">Combined status when both targets are detected together</span><br>
+</p>
+</div>
+<pre class="r"><code>both_results %&gt;% 
+  mapGrlCols(var = c(&quot;region&quot;, &quot;status&quot;)) %&gt;% 
+  as_tibble(rangeAsChar = FALSE) %&gt;% 
+  dplyr::filter(!if_any(ends_with(&quot;status&quot;), is.na)) %&gt;% 
+  mutate(
+    ER_status = fct_relabel(ER_status, \(x) paste(&quot;ER&quot;, x)),
+    H3K27ac_status = fct_relabel(H3K27ac_status, \(x) paste(&quot;H3K27ac&quot;, x)),
+    combined = fct_cross(ER_status, H3K27ac_status, sep = &quot;\n&quot;)
+  ) %&gt;% 
+  plotSplitDonut(
+    scale_by = &quot;width&quot;,
+    inner = &quot;H3K27ac_region&quot;, outer = &quot;combined&quot;,
+    inner_palette = region_colours,
+    inner_glue = &quot;{str_wrap(.data[[inner]], 15)}\n{comma(n, 1)}kb&quot;,
+    outer_glue = &quot;{.data[[outer]]}\n{comma(n, 0.1)}kb&quot;,
+    outer_min_p = 0.01, #outer_max_p = 0.02,
+    explode_outer = &quot;(Inc|Dec).+(Inc|Dec)&quot;, explode_r = 0.4,
+    label_alpha = 0.7
+  )</code></pre>
+<div class="figure"><span style="display:block;" id="fig:plot-stauts-region-donut"></span>
+<img src="index_files/figure-html/plot-stauts-region-donut-1.png" alt="Combined status shown by the region, as defined by the best overlap for H3K27ac signal. Regions here are scaled by width and totals shown in kb" width="100%" />
+<p class="caption">
+Figure 19: <span class="caption-title">Combined status shown by the region, as defined by the best overlap for H3K27ac signal</span><br>Regions here are scaled by width and totals shown in kb
+</p>
+</div>
+<pre class="r"><code>both_results %&gt;% 
+  mapGrlCols(var = c(&quot;region&quot;, &quot;status&quot;), collapse = &quot;gene_name&quot;) %&gt;% 
+  filter(
+    str_detect(ER_status, &quot;Increased|Decreased&quot;),
+    str_detect(H3K27ac_status, &quot;Increased|Decreased&quot;)
+  )</code></pre>
+<pre><code>## GRanges object with 4 ranges and 5 metadata columns:
+##       seqnames            ranges strand |                ER_region
+##          &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |                 &lt;factor&gt;
+##   [1]    chr10 71879101-71881150      * | Promoter (-2500/+500)   
+##   [2]    chr10 79623301-79635950      * | Promoter (-2500/+500)   
+##   [3]    chr10 81101651-81103150      * | Upstream Promoter (-5kb)
+##   [4]    chr10 81101651-81103150      * | Upstream Promoter (-5kb)
+##                 H3K27ac_region ER_status H3K27ac_status             gene_name
+##                       &lt;factor&gt;  &lt;factor&gt;       &lt;factor&gt;           &lt;character&gt;
+##   [1] Promoter (-2500/+500)    Increased      Increased                 AIFM2
+##   [2] Promoter (-2500/+500)    Increased      Increased DLG5; ENSG00000204049
+##   [3] Intergenic (&lt;10kb)       Increased      Increased                  PPIF
+##   [4] Upstream Promoter (-5kb) Increased      Increased                  PPIF
+##   -------
+##   seqinfo: 1 sequence from hg19 genome</code></pre>
+<div id="association-between-datasets" class="section level3" number="5.0.1">
+<h3><span class="header-section-number">5.0.1</span> Association Between Datasets</h3>
+</div>
+<div id="regions-in-contex" class="section level3" number="5.0.2">
+<h3><span class="header-section-number">5.0.2</span> Regions in Contex</h3>
 </div>
 </div>
 <div id="references" class="section level1 unnumbered">
@@ -1131,22 +1377,23 @@ Zhang, Yong, Tao Liu, Clifford A Meyer, Jérôme Eeckhoute, David S Johnson, Bra
 ## [8] base     
 ## 
 ## other attached packages:
-##  [1] rtracklayer_1.60.0          edgeR_3.42.4               
-##  [3] limma_3.56.1                csaw_1.34.0                
-##  [5] Rsamtools_2.16.0            Biostrings_2.68.1          
-##  [7] XVector_0.40.0              extraChIPs_1.5.7           
-##  [9] SummarizedExperiment_1.30.1 Biobase_2.60.0             
-## [11] MatrixGenerics_1.12.0       matrixStats_1.0.0          
-## [13] ggside_0.2.2                BiocParallel_1.34.2        
-## [15] plyranges_1.20.0            GenomicRanges_1.52.0       
-## [17] GenomeInfoDb_1.36.0         IRanges_2.34.0             
-## [19] S4Vectors_0.38.1            BiocGenerics_0.46.0        
-## [21] glue_1.6.2                  lubridate_1.9.2            
-## [23] forcats_1.0.0               stringr_1.5.0              
-## [25] dplyr_1.1.2                 purrr_1.0.1                
-## [27] readr_2.1.4                 tidyr_1.3.0                
-## [29] tibble_3.2.1                ggplot2_3.4.2              
-## [31] tidyverse_2.0.0             BiocStyle_2.28.0           
+##  [1] patchwork_1.1.2             rtracklayer_1.60.0         
+##  [3] edgeR_3.42.4                limma_3.56.1               
+##  [5] csaw_1.34.0                 Rsamtools_2.16.0           
+##  [7] Biostrings_2.68.1           XVector_0.40.0             
+##  [9] extraChIPs_1.5.7            SummarizedExperiment_1.30.1
+## [11] Biobase_2.60.0              MatrixGenerics_1.12.0      
+## [13] matrixStats_1.0.0           ggside_0.2.2               
+## [15] BiocParallel_1.34.2         plyranges_1.20.0           
+## [17] GenomicRanges_1.52.0        GenomeInfoDb_1.36.0        
+## [19] IRanges_2.34.0              S4Vectors_0.38.1           
+## [21] BiocGenerics_0.46.0         glue_1.6.2                 
+## [23] lubridate_1.9.2             forcats_1.0.0              
+## [25] stringr_1.5.0               dplyr_1.1.2                
+## [27] purrr_1.0.1                 readr_2.1.4                
+## [29] tidyr_1.3.0                 tibble_3.2.1               
+## [31] ggplot2_3.4.2               tidyverse_2.0.0            
+## [33] BiocStyle_2.28.0           
 ## 
 ## loaded via a namespace (and not attached):
 ##   [1] splines_4.3.1              BiocIO_1.10.0             
@@ -1213,11 +1460,11 @@ Zhang, Yong, Tao Liu, Clifford A Meyer, Jérôme Eeckhoute, David S Johnson, Bra
 ## [123] deldir_1.0-9               munsell_0.5.0             
 ## [125] lazyeval_0.2.2             Matrix_1.5-4.1            
 ## [127] BSgenome_1.68.0            hms_1.1.3                 
-## [129] patchwork_1.1.2            bit64_4.0.5               
-## [131] KEGGREST_1.40.0            highr_0.10                
-## [133] igraph_1.4.3               broom_1.0.4               
-## [135] memoise_2.0.1              bslib_0.4.2               
-## [137] bit_4.0.5                  GenomicInteractions_1.34.0</code></pre>
+## [129] bit64_4.0.5                KEGGREST_1.40.0           
+## [131] highr_0.10                 igraph_1.4.3              
+## [133] broom_1.0.4                memoise_2.0.1             
+## [135] bslib_0.4.2                bit_4.0.5                 
+## [137] GenomicInteractions_1.34.0</code></pre>
 </div>
 
 

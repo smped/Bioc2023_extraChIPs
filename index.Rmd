@@ -66,7 +66,8 @@ Additional packages required can be installed as follows:
 
 ```{r install-extra, eval=FALSE}
 pkg <- c(
-  "rtracklayer", "tidyverse", "glue", "plyranges", "Rsamtools", "csaw", "edgeR"
+  "rtracklayer", "tidyverse", "glue", "plyranges", "Rsamtools", "csaw", "edgeR",
+  "patchwork"
 )
 BiocManager::install(pkgs = pkg, update = FALSE, ask = FALSE)
 ```
@@ -80,6 +81,7 @@ library(Rsamtools)
 library(csaw)
 library(edgeR)
 library(rtracklayer)
+library(patchwork)
 theme_set(theme_bw())
 ```
 
@@ -203,7 +205,24 @@ names(peaks) <- str_remove_all(names(peaks), "_peaks.narrowPeak")
 
 (Names can also be set using `glue` syntax, however the above is generally more easily comprehended at first glance.)
 
-One of the first tasks is usually to check how similar our replicates are, which is easily performed using `plotOverlaps()`
+Blacklisted regions and greylisted regions are also able to be applied during import.
+Blacklisted regions are usually available from [public sources](https://github.com/Boyle-Lab/Blacklist/tree/master/lists), whilst grey-listed regions are derived from a relevant input.
+
+These have also been provided and can be loaded separaetly then combined.
+
+```{r black-grey-lists}
+bg_list <- c("data/chr10_blacklist.bed", "data/chr10_greylist.bed") %>% 
+  lapply(import.bed, seqinfo = sq) %>% 
+  lapply(granges) %>% 
+  GRangesList() %>% 
+  unlist() %>% 
+  sort()
+peaks <- importPeaks(fl, seqinfo = sq, centre = TRUE, blacklist = bg_list)
+names(peaks) <- str_remove_all(names(peaks), "_peaks.narrowPeak")
+```
+
+Now we've loaded our peaks and excluded peaks within unreliable ranges, one of the first tasks might be to check how similar our replicates are.
+This can easily be performed using `plotOverlaps()`
 
 
 ```{r plot-overlaps, fig.cap = "Overlapping peaks between all replicates"}
@@ -530,13 +549,203 @@ Whilst fixed-width windows are relatively simple conceptually, sliding windows o
 Sliding window analysis is well-implemented in `csaw`, however `extraChIPs` offers the additional ability to combine ranges using asymptotically correct *harmonic mean p-value* [@Wilson2019-ln].
 The step of moving from genomic windows to a subset of windows which we can confidently assume contain signal is also able to be managed by `extraChIPs` using `dualFilter()`.
 
+For this section of the analysis, we'll use data for the histone mark H3K27ac from the same cell type under the same two conditions (E2 + E2DHT).
+A new sample metadata sheet can be formed using the following, and we'll immediately for the BamFileList for reading in counts.
+
+```{r h3k-samples}
+h3k_samples <- tibble(
+  accession = paste0("SRR83151", seq(86, 91)),
+  target = "H3K27ac",
+  treatment = c(factor(rep(treat_levels, each = 3), levels = treat_levels))
+) %>% 
+  bind_rows(
+    tibble(accession = "SRR8315192", target = "Input")
+  )
+h3k_bfl <- BamFileList(glue("data/{h3k_samples$accession}.bam"))
+names(h3k_bfl) <- h3k_samples$accession
+```
+
 ### Defining Windows
+
+Given we're going to use sliding windows, we can use a smaller window size and need to set a step-size for 'sliding' along the genome.
+Whilst there are no hard and fast rules, for a histone marks, window sizes of 150bp sliding in steps of 50bp may be a good choice.
+
+
+```{r set-windows}
+win_size <- 150
+win_step <- 50
+```
+
+The example dataset for today can be easily managed on a laptop, however, it should be noted that for a full-scale dataset, large amounts of RAM are required, and this process may take considerable time.
+In the following we define some key parameters for passing to `csaw::windowCounts()`, where we restrict counting to `chr10`, provide out black and grey-lists and let the function know that these are all single-end reads.
+
+From there, we perform the counts using the window step & size as defined above, extending each read to represent a full DNA fragment of 200nt, and discarding any regions with fewer than 1 read/sample.
+
+```{r wincounts}
+rp <- readParam(pe = "none", restrict = "chr10", discard = bg_list)
+wincounts <- windowCounts(
+  bam.files = h3k_bfl,
+  spacing = win_step, width = win_size, ext = 200,
+  filter = length(h3k_bfl),
+  param = rp
+)
+seqlevels(wincounts) <- seqlevels(sq)
+seqinfo(wincounts) <- sq
+dim(wincounts)
+```
+
+Many of these windows will have counted reads which are essentially background noise, and we wish to exclude these and only retain those which confidently contain signal from our ChIP target.
+`extraChIPs` provides a function `dualFilter()` in which a set of guide ranges can be provided where signal is expected.
+Thresholds for minimum overall signal, and signal relative to input are set based on retaining a give proportion of reads which overlap these ranges, with lower numbers returning more stringently selected ranges.
+
+A set of guide ranges has been prepared following a similar process to forming union peaks above for ER$\alpha$, and can be loaded then passed to `dualFilter()`.
+Again, this dataset is easily handled on a laptop, whilst for a complete genome, considerable amounts of RAM will be required.
+
+```{r filtcounts}
+guide_ranges <- import.bed("data/H3K27ac_chr10.bed", seqinfo = sq)
+filtcounts <- dualFilter(
+  x = wincounts[,dplyr::filter(h3k_samples, target == "H3K27ac")$accession],
+  bg  =  wincounts[,dplyr::filter(h3k_samples, target == "Input")$accession],
+  ref = guide_ranges, q = 0.6
+)
+colData(filtcounts) <- colData(filtcounts) %>% 
+  as_tibble(rownames = "accession") %>% 
+  left_join(h3k_samples) %>% 
+  as("DataFrame")
+dim(filtcounts)
+```
+
+By default, an additional assay `logCPM` will be added during this step and this can also be used for QC.
+
+```{r plot-filt-assays, fig.cap = "A) Density plot and B) PCA based on logCPM values from the sliding windows retained after filtering."}
+A <- plotAssayDensities(filtcounts, assay = "logCPM", colour = "treatment") + 
+  scale_colour_manual(values = treat_colours)
+B <- plotAssayPCA(filtcounts, assay = "logCPM", colour = "treatment", label = "accession") +
+  scale_colour_manual(values = treat_colours)
+A + B + plot_layout(guides = "collect") + plot_annotation(tag_levels = "A") 
+```
+
+Now we can pass our filtered windows to `fitAssayDiff()` as we did previously, however, once we have performed statistical testing on each window, we need to merge windows to obtain our final results.
+
+```{r fit-filtcounts}
+X <- model.matrix(~treatment, data = colData(filtcounts))
+h3k_all <- fitAssayDiff(filtcounts, norm = "TMM", design = X, asRanges = TRUE)
+```
+
+Although we haven't declared in regions as showing differential signal, we can still inspect an MA plot for any unexpected issues in our data
+
+```{r plotma-h3k, fig.cap = "MA plot using all sliding windows retained after the initial filtering step."}
+h3k_all %>% 
+  as_tibble() %>% 
+  ggplot(aes(logCPM, logFC)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+As expected with H3K27ac signal, the total amount of signal obtained under two related conditions is similar and we have a nicely centred plot.
 
 ### Merging Windows
 
+Now we can merge overlapping windows to obtain our final results.
+Using `extraChIPs` this can be performed using all methods offered by `csaw`, (`?mergeByCol` and `?mergeBySig`) as well as using the asymptotically-exact harmonic mean p-value, which we'll use here.
+
+```{r merge-h3k}
+h3k_results <- mergeByHMP(h3k_all, min_win = 2) %>% 
+  addDiffStatus()
+h3k_results
+```
+
+Notice that we have additional columns not returned when using fixed-width windows.
+The first three indicate how many original windows were merged, along with how many may have been individually considered as showing differential signal in either direction.
+Next to these is the column `keyval_range` which indicates the original window which returned the lowest p-value.
+Given the harmonic men involves summing the inverse of raw p-values, these are considered to be weights and the returned values for logCPM and logFC are weighted averages, using $w_i = \frac{1}{p_i}$ as weights for each windows $i$.
+Given this, any MA-plots may appear to show bias, which is in fact due to the weighting strategy used here.
+As such the previous figure using all windows prior to merging is the best strategy for identifying any issues with the data
+
+```{r plotma-merged-h3k, fig.cap = "MA plot showing results after merging overlapping windows."}
+h3k_results %>% 
+  as_tibble() %>% 
+  ggplot(aes(logCPM, logFC)) +
+  geom_point(aes(colour = status), alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_colour_manual(values = status_colours)
+```
+
+
 # Comparing Both Sets Of Results
 
-## Association Between Datasets
+```{r}
+h3k_results <- h3k_results %>% 
+  select(logCPM, logFC, PValue = hmp, FDR = hmp_fdr, status) %>% 
+  mutate(region = bestOverlap(., unlist(regions), var = "region")) %>% 
+  mapByFeature(genes = gtf$gene, prom = regions$promoter)
+both_results <- GRangesList(ER = er_results, H3K27ac = h3k_results) 
+```
+
+```{r plot-pairwise-logcpm, fig.cap = "Comparison of logCPM values when both targets are detected, with boxplots showing the range of values when each target was detected alone, or when both were detected together"}
+plotPairwise(both_results, var = "logCPM")
+```
+
+```{r plot-pairwise-logFC, fig.cap = "Comparison of logFC values when both targets are detcted, with boxplots showing the range of values when only one target is detected, or when both are detected"}
+plotPairwise(
+  both_results, var = "logFC", colour = "status", label = "gene_name"
+) +
+  scale_colour_brewer(palette = "Set1", direction = -1)
+```
+
+```{r plot-status-donut, fig.cap = "Combined status when both targets are detected together"}
+both_results %>% 
+  mapGrlCols(var = "status") %>% 
+  as_tibble() %>% 
+  dplyr::filter(!if_any(ends_with("status"), is.na)) %>% 
+  dplyr::rename_with(\(x) str_remove_all(x, "_status")) %>% 
+  plotSplitDonut(
+    inner = "H3K27ac", outer = "ER",
+    inner_palette = status_colours, outer_palette = status_colours,
+    inner_glue = "{inner}\n{.data[[inner]]}\n{n}",
+    outer_glue = "{outer}\n{.data[[outer]]}\n{n}",
+    label_alpha = 0.8, min_p = 0.02,
+    explode_inner = "Increased", explode_outer = "Increased", 
+    explode_query = "AND", explode_r = 0.3
+  )
+```
+
+```{r plot-stauts-region-donut, fig.cap = "Combined status shown by the region, as defined by the best overlap for H3K27ac signal. Regions here are scaled by width and totals shown in kb"}
+both_results %>% 
+  mapGrlCols(var = c("region", "status")) %>% 
+  as_tibble(rangeAsChar = FALSE) %>% 
+  dplyr::filter(!if_any(ends_with("status"), is.na)) %>% 
+  mutate(
+    ER_status = fct_relabel(ER_status, \(x) paste("ER", x)),
+    H3K27ac_status = fct_relabel(H3K27ac_status, \(x) paste("H3K27ac", x)),
+    combined = fct_cross(ER_status, H3K27ac_status, sep = "\n")
+  ) %>% 
+  plotSplitDonut(
+    scale_by = "width",
+    inner = "H3K27ac_region", outer = "combined",
+    inner_palette = region_colours,
+    inner_glue = "{str_wrap(.data[[inner]], 15)}\n{comma(n, 1)}kb",
+    outer_glue = "{.data[[outer]]}\n{comma(n, 0.1)}kb",
+    outer_min_p = 0.01, #outer_max_p = 0.02,
+    explode_outer = "(Inc|Dec).+(Inc|Dec)", explode_r = 0.4,
+    label_alpha = 0.7
+  )
+```
+
+```{r key-results}
+both_results %>% 
+  mapGrlCols(var = c("region", "status"), collapse = "gene_name") %>% 
+  filter(
+    str_detect(ER_status, "Increased|Decreased"),
+    str_detect(H3K27ac_status, "Increased|Decreased")
+  )
+```
+
+
+### Association Between Datasets
+
+### Regions in Contex
+
 
 
 # References {.unnumbered}
