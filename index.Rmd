@@ -23,7 +23,7 @@ vignette: |
 ```{r setup, echo=FALSE, eval = TRUE}
 knitr::opts_chunk$set(
   message = FALSE, warning = FALSE,
-  fig.height = 6, fig.width = 8, dev = 'png', crop = NULL
+  fig.height = 6, fig.width = 8, dev = 'png'
 )
 ```
 
@@ -37,7 +37,7 @@ The focus is on:
 
 - Differential Signal Detection
 - Comparison between ChIP targets or sets of results
-- Working with GRanges objects containing important values in the `mcols()` element
+- Working with `GRanges` objects containing important values in the `mcols()` element
 - Visualisation of Data and Results
 
 The package was developed to utilise *existing* S4 Object Classes and behave in a *tidy-friendly manner*, whilst not being strictly designed under tidy programming guidelines.
@@ -66,8 +66,8 @@ Additional packages required can be installed as follows:
 
 ```{r install-extra, eval=FALSE}
 pkg <- c(
-  "rtracklayer", "tidyverse", "glue", "plyranges", "Rsamtools", "csaw", "edgeR",
-  "patchwork"
+  "rtracklayer", "tidyverse", "glue", "plyranges", "Rsamtools", "csaw", 
+  "edgeR","patchwork"
 )
 BiocManager::install(pkgs = pkg, update = FALSE, ask = FALSE)
 ```
@@ -87,7 +87,7 @@ theme_set(theme_bw())
 
 
 Data can be obtained from [here]() and should be placed in a folder called `data` within your current working directory.
-This data has been preprocessed [here](https://github.com/smped/PRJNA509779) using the prepareChIPs workflow [@pederson_2023], and subset to a region on Chromosome 10 for easier working in today's context.
+This data has been pre-processed [here](https://github.com/smped/PRJNA509779) using the prepareChIPs workflow [@pederson_2023], and subset to a region on Chromosome 10 for easier working in today's context.
 
 The two targets in this dataset are the Estrogen Receptor (ER$\alpha$) and the histone mark H3K27ac.
 Data has been taken from ZR-75-1 cells cultured in Estrogen (E2) or Estrogen + Dihydrotestosterone (E2DHT), and was first published by researchers from the Dame Roma Mitchell Cancer Research Laboratories [@Hickey2021-mz]
@@ -115,7 +115,8 @@ Finally, we'll define a `Seqinfo` object just for today's data.
 
 ```{r sq}
 sq <- Seqinfo(
-  seqnames = "chr10", seqlengths = 135534747, isCircular = FALSE, genome = "hg19"
+  seqnames = "chr10", seqlengths = 135534747, isCircular = FALSE, 
+  genome = "hg19"
 )
 ```
 
@@ -149,7 +150,7 @@ These are retained when calling `reduceMC`
 reduceMC(x)
 ```
 
-All other functions behave in a simlar manner
+All other functions behave in a similar manner
 
 ```{r other-mc}
 y <- GRanges(c("chr1:11-15"))
@@ -198,20 +199,22 @@ This will always return a `GRangesList` for simple downstream analysis.
 If importing `narrowPeak` files, the peak centre can be automatically added.
 
 ```{r import-peaks}
-fl <- glue("data/{er_samples$accession}_peaks.narrowPeak")
+fl <- glue("data/ER/{er_samples$accession}_peaks.narrowPeak")
 peaks <- importPeaks(fl, seqinfo = sq, centre = TRUE)
 names(peaks) <- str_remove_all(names(peaks), "_peaks.narrowPeak")
 ```
 
 (Names can also be set using `glue` syntax, however the above is generally more easily comprehended at first glance.)
 
-Blacklisted regions and greylisted regions are also able to be applied during import.
+Blacklisted regions and grey-listed regions are also able to be applied during import.
 Blacklisted regions are usually available from [public sources](https://github.com/Boyle-Lab/Blacklist/tree/master/lists), whilst grey-listed regions are derived from a relevant input.
 
-These have also been provided and can be loaded separaetly then combined.
+These have also been provided and can be loaded separately then combined.
 
 ```{r black-grey-lists}
-bg_list <- c("data/chr10_blacklist.bed", "data/chr10_greylist.bed") %>% 
+bg_list <- file.path(
+  "data", "annotations", c("chr10_blacklist.bed", "chr10_greylist.bed")
+) %>% 
   lapply(import.bed, seqinfo = sq) %>% 
   lapply(granges) %>% 
   GRangesList() %>% 
@@ -262,7 +265,7 @@ Not that whilst we have the same number of ranges here, the ranges are tighter.
 makeConsensus(peaks[1:3], p = 2/3, method = "coverage")
 ```
 
-In order to make consensus peaks for each condition, we can split by treatment group, then use a simple `lapply()` trick, to work wth both treatment groups together.
+In order to make consensus peaks for each condition, we can split by treatment group, then use a simple `lapply()` trick, to work with both treatment groups together.
 
 ```{r lapply-consenses}
 cons_peaks <- peaks %>% 
@@ -273,11 +276,11 @@ cons_peaks <- peaks %>%
   GRangesList()
 ```
 
-A lot happened in that code chunk, se let's break it down
+A lot happened in that code chunk, so let's break it down
 
 1. We split samples based on the treatment (`split(f = er_samples$treatment)`), then
 2. Identified consensus peaks within each treatment found in 2/3 samples, retaining the peak centre (`lapply(makeConsensus, p = 2/3, var = "centre")`)
-3. Subset the mcols to only retain the peak centre (`lapply(select, centre)`). 
+3. Subset the `mcols` to only retain the peak centre (`lapply(select, centre)`). 
 4. The previous step returned centre estimates as a `NumericList`, so we took the mean of these for each consensus peak
 5. We coerced to a `GRangeList`
 
@@ -303,7 +306,9 @@ A Gencode GTF has been provided in data, restricted to the regions of chr10 we'r
 We can load this then, split based on the feature type, giving a `GRangesList` with gene, transcript and exon-level features.
 
 ```{r load-gtf}
-gtf <- file.path("data", "gencode.v43lift37.chr10.annotation.gtf.gz") %>% 
+gtf <- file.path(
+  "data", "annotations", "gencode.v43lift37.chr10.annotation.gtf.gz"
+) %>% 
   import.gff() %>% 
   split(.$type)
 seqinfo(gtf) <- sq
@@ -372,7 +377,9 @@ Finally, we might wish to know which genes are likely targets for each peak.
 4. Remaining ranges are mapped to the *nearest gene* within a given distance
 
 ```{r add-genes}
-union_peaks <- mapByFeature(union_peaks, genes = gtf$gene, prom = regions$promoter)
+union_peaks <- mapByFeature(
+  union_peaks, genes = gtf$gene, prom = regions$promoter
+)
 union_peaks %>% filter(str_detect(region, "^Promoter"), !E2)
 ```
 
@@ -400,12 +407,13 @@ centred_peaks <- union_peaks %>%
 In the above, we've 1) created a new range from the centre-points, 2) placed the original range as a new column in the `mcols` element, 3) moved the centred range to being the primary range using `colToRanges()`.
 From there, we've resized to a standard width of 400bp.
 We can now use these ranges to count alignments across our set of samples.
-The bam files should be in the `data` directory and can be formed into a BamFileList, before being passed to `regionCounts()` from `csaw`.
-This will return a `RangedSummarizedExperiment` with totals from the entire bam file in the `totals` column of the colData element
+The bam files should be in the `data` directory and can be formed into a `BamFileList`, before being passed to `regionCounts()` from `csaw`.
+This will return a `RangedSummarizedExperiment` with totals from the entire bam file in the `totals` column of the `colData` element
 
 ```{r load-er-counts}
-er_bfl <- BamFileList(glue("data/{er_samples$accession}.bam"))
-names(er_bfl) <- er_samples$accession
+er_bfl <- file.path("data", "ER", paste0(er_samples$accession, ".bam")) %>% 
+  BamFileList() %>% 
+  setNames(er_samples$accession)
 er_se <- regionCounts(er_bfl, centred_peaks, ext = 200)
 seqinfo(er_se) <- sq
 er_se
@@ -444,7 +452,9 @@ plotAssayDensities(er_se, trans = "log1p", colour = "treatment") +
 We might follow this with a PCA
 
 ```{r plot-er-pca, fig.cap = "PCA plot for all ER samples"}
-plotAssayPCA(er_se, trans = "log1p", colour = "treatment", label = "accession") +
+plotAssayPCA(
+  er_se, trans = "log1p", colour = "treatment", label = "accession"
+) +
   scale_colour_manual(values = treat_colours)
 ```
 
@@ -484,6 +494,7 @@ er_results <- fitAssayDiff(er_se, design = X, asRanges = TRUE)
 The default normalisation is to use Library Size as contained in the `totals` column.
 However, by setting `lib.size = NULL` then `colSums()` will be used if this is considered more suitable.
 Additionally, any of the normalisation methods available in `edgeR::calcNormFactors()` can be applied.
+Providing a column name to the `groups` argument will also normalise within groups, instead of across the entire dataset.
 
 ```{r er-tmm}
 er_results <- fitAssayDiff(er_se, design = X, norm = "TMM", asRanges = TRUE)
@@ -499,7 +510,7 @@ er_results <- fitAssayDiff(
 arrange(er_results, PValue)
 ```
 
-Given these results are in a GRanges object, we can produce an MA-plot using conventional `ggplot2` approaches.
+Given these results are in a `GRanges` object, we can produce an MA-plot using conventional `ggplot2` approaches.
 
 ```{r er-plotma, fig.cap = "MA-plot for ERa analysis using fixed-width windows, TMM normalisation and setting 20% as the range beyond which we consider diferential signal to be of interest."}
 status_colours <- c(
@@ -518,7 +529,7 @@ er_results %>%
 
 Additionally, we might like to compare Differential Signal Status against the regions we defined earlier and 
 `plotSplitDonut()` is well suited to this.
-A key advanatge of `plotSplitDonut()` is the ability to specify inner and outer palettes separately
+A key advantage of `plotSplitDonut()` is the ability to specify inner and outer palettes separately
 
 ```{r plotsplitdonut-default, fig.cap = "Split-Donut plot showing distribution of peaks with diferential signal"}
 er_results %>% 
@@ -550,7 +561,7 @@ Sliding window analysis is well-implemented in `csaw`, however `extraChIPs` offe
 The step of moving from genomic windows to a subset of windows which we can confidently assume contain signal is also able to be managed by `extraChIPs` using `dualFilter()`.
 
 For this section of the analysis, we'll use data for the histone mark H3K27ac from the same cell type under the same two conditions (E2 + E2DHT).
-A new sample metadata sheet can be formed using the following, and we'll immediately for the BamFileList for reading in counts.
+A new sample metadata sheet can be formed using the following, and we'll immediately for the `BamFileList` for reading in counts.
 
 ```{r h3k-samples}
 h3k_samples <- tibble(
@@ -561,8 +572,11 @@ h3k_samples <- tibble(
   bind_rows(
     tibble(accession = "SRR8315192", target = "Input")
   )
-h3k_bfl <- BamFileList(glue("data/{h3k_samples$accession}.bam"))
-names(h3k_bfl) <- h3k_samples$accession
+h3k_bfl <- file.path(
+  "data", "H3K27ac", paste0(h3k_samples$accession, ".bam")
+) %>% 
+  BamFileList() %>% 
+  setNames(h3k_samples$accession)
 ```
 
 ### Defining Windows
@@ -602,7 +616,8 @@ A set of guide ranges has been prepared following a similar process to forming u
 Again, this dataset is easily handled on a laptop, whilst for a complete genome, considerable amounts of RAM will be required.
 
 ```{r filtcounts}
-guide_ranges <- import.bed("data/H3K27ac_chr10.bed", seqinfo = sq)
+guide_ranges <- file.path("data", "H3K27ac", "H3K27ac_chr10.bed") %>% 
+  import.bed(seqinfo = sq)
 filtcounts <- dualFilter(
   x = wincounts[,dplyr::filter(h3k_samples, target == "H3K27ac")$accession],
   bg  =  wincounts[,dplyr::filter(h3k_samples, target == "Input")$accession],
@@ -617,10 +632,12 @@ dim(filtcounts)
 
 By default, an additional assay `logCPM` will be added during this step and this can also be used for QC.
 
-```{r plot-filt-assays, fig.cap = "A) Density plot and B) PCA based on logCPM values from the sliding windows retained after filtering."}
+```{r plot-filt-assays, fig.height=5, fig.cap = "A) Density plot and B) PCA based on logCPM values from the sliding windows retained after filtering."}
 A <- plotAssayDensities(filtcounts, assay = "logCPM", colour = "treatment") + 
   scale_colour_manual(values = treat_colours)
-B <- plotAssayPCA(filtcounts, assay = "logCPM", colour = "treatment", label = "accession") +
+B <- plotAssayPCA(
+  filtcounts, assay = "logCPM", colour = "treatment", label = "accession"
+) +
   scale_colour_manual(values = treat_colours)
 A + B + plot_layout(guides = "collect") + plot_annotation(tag_levels = "A") 
 ```
@@ -650,15 +667,16 @@ Now we can merge overlapping windows to obtain our final results.
 Using `extraChIPs` this can be performed using all methods offered by `csaw`, (`?mergeByCol` and `?mergeBySig`) as well as using the asymptotically-exact harmonic mean p-value, which we'll use here.
 
 ```{r merge-h3k}
-h3k_results <- mergeByHMP(h3k_all, min_win = 2) %>% 
+h3k_results <- mergeByHMP(h3k_all, min_win = 2, merge_within = win_size + 1) %>% 
   addDiffStatus()
 h3k_results
 ```
 
 Notice that we have additional columns not returned when using fixed-width windows.
 The first three indicate how many original windows were merged, along with how many may have been individually considered as showing differential signal in either direction.
-Next to these is the column `keyval_range` which indicates the original window which returned the lowest p-value.
-Given the harmonic men involves summing the inverse of raw p-values, these are considered to be weights and the returned values for logCPM and logFC are weighted averages, using $w_i = \frac{1}{p_i}$ as weights for each windows $i$.
+Next to these is the column `keyval_range` which indicates the original window which returned the lowest p-value, or by setting `keyval = "merged"`, will return the range containing all original windows with raw p-values below the harmonic-mean p-value.
+
+Given the harmonic mean involves summing the inverse of raw p-values, these are considered to be weights and the returned values for logCPM and logFC are also weighted averages, using $w_i = \frac{1}{p_i}$ as weights for each windows $i$.
 Given this, any MA-plots may appear to show bias, which is in fact due to the weighting strategy used here.
 As such the previous figure using all windows prior to merging is the best strategy for identifying any issues with the data
 
@@ -674,7 +692,10 @@ h3k_results %>%
 
 # Comparing Both Sets Of Results
 
-```{r}
+`extraChIPs` provide additional capacity for comparing between two or more sets of results.
+The key structure for this is a `GRangesList`, so let's ensure we have compatible column names, then form a combined object.
+
+```{r both-results}
 h3k_results <- h3k_results %>% 
   select(logCPM, logFC, PValue = hmp, FDR = hmp_fdr, status) %>% 
   mutate(region = bestOverlap(., unlist(regions), var = "region")) %>% 
@@ -682,9 +703,23 @@ h3k_results <- h3k_results %>%
 both_results <- GRangesList(ER = er_results, H3K27ac = h3k_results) 
 ```
 
+
+## Association Between Datasets
+
+Now we have a combined `GRangesList` object, we can plot columns from each element against the other.
+If we wish to compare signal in sites where both are detected, we can use `plotPairwise()`, which will also show boxplots of signal for where only one target is detected, alongside those where both targets are detected
+
+
 ```{r plot-pairwise-logcpm, fig.cap = "Comparison of logCPM values when both targets are detected, with boxplots showing the range of values when each target was detected alone, or when both were detected together"}
 plotPairwise(both_results, var = "logCPM")
 ```
+
+Although we only have a handful of sites in our example dataset, one might easily suspect that signal for both targets is higher when both are detected together.
+
+Alternatively, we might wish to see which sites are changing together, or where only one is changing.
+This time we'll plot `logFC`, colouring points by the *combined* Differential Signal status in each element, and adding labels from the `gene_name` column.
+Labels are only added to the sites in each combined group which are furthest from zero.
+
 
 ```{r plot-pairwise-logFC, fig.cap = "Comparison of logFC values when both targets are detcted, with boxplots showing the range of values when only one target is detected, or when both are detected"}
 plotPairwise(
@@ -692,6 +727,26 @@ plotPairwise(
 ) +
   scale_colour_brewer(palette = "Set1", direction = -1)
 ```
+
+We can also compare columns by performing an operation somewhat analogous to `pivot_wider` where we find overlapping ranges and add columns from each element to a set of consensus peaks.
+
+```{r}
+mapGrlCols(both_results, var = "status") 
+```
+
+We can use this to quickly find sites which are of interest in both sets of results, along with their targets
+
+```{r}
+both_results %>% 
+  mapGrlCols(var = c("region", "status", "FDR"), collapse = "gene_name") %>% 
+  filter(
+    str_detect(ER_status, "Increased|Decreased"),
+    str_detect(H3K27ac_status, "Increased|Decreased")
+  )
+```
+
+
+This also makes comparison of sites easy using `plotSplitDonut()` and in the following we'll only show sites where both are detected.
 
 ```{r plot-status-donut, fig.cap = "Combined status when both targets are detected together"}
 both_results %>% 
@@ -710,6 +765,9 @@ both_results %>%
   )
 ```
 
+Perhaps we might wish to look at the combined status in reference to the genomic regions we defined previously.
+Here, we'll scale the site by width to show results in kb, instead of counting sites.
+
 ```{r plot-stauts-region-donut, fig.cap = "Combined status shown by the region, as defined by the best overlap for H3K27ac signal. Regions here are scaled by width and totals shown in kb"}
 both_results %>% 
   mapGrlCols(var = c("region", "status")) %>% 
@@ -724,6 +782,7 @@ both_results %>%
     scale_by = "width",
     inner = "H3K27ac_region", outer = "combined",
     inner_palette = region_colours,
+    total_glue = "{comma(N)}kb",
     inner_glue = "{str_wrap(.data[[inner]], 15)}\n{comma(n, 1)}kb",
     outer_glue = "{.data[[outer]]}\n{comma(n, 0.1)}kb",
     outer_min_p = 0.01, #outer_max_p = 0.02,
@@ -732,20 +791,139 @@ both_results %>%
   )
 ```
 
-```{r key-results}
-both_results %>% 
-  mapGrlCols(var = c("region", "status"), collapse = "gene_name") %>% 
-  filter(
-    str_detect(ER_status, "Increased|Decreased"),
-    str_detect(H3K27ac_status, "Increased|Decreased")
+
+## Regions in Context
+
+As well the above strategies for inspecting results, looking directly at the sites using a genome browser is a common strategy.
+`extraChIPs` provides the function `plotHFGC()` which enables us to take a genome level viewpoint of any 1) HiC Interactions, 2) Features, 3) Gene Models and 4) Coverage.
+All tracks are optional and will be displayed in this order when provided using the various track types provided by `Gviz` [@gviz].
+In order to use this approach to scan through our results choosing one ranges at a time, let's define the elements that we have starting with our genomic regions, which we would consider to be a set of genomic features.
+For this track, we'll need a `GRangesList()` and each element will be filled a different colour, meaning we'll need a matching vector of colours.
+We already have both of these from earlier on our workflow, but we will need to change the names on our colour vector
+
+```{r rename-region-colours}
+names(region_colours) <- names(regions)
+```
+
+Next we'll setup our gene models in the format that `Gviz` is familiar with, using the `exons` element from our GTF annotations.
+
+```{r define-gee-models}
+gene_models <- gtf$exon %>% 
+  select(
+    type, gene = gene_id, exon = exon_id, transcript = transcript_id, 
+    symbol = gene_name
   )
 ```
 
+This leaves coverage as our final track, or set of tracks.
+`plotHFGC()` takes `BigWigFileList` objects for coverage and if passing a single `BigwigFileList`, each element will be drawn on a separate track.
+For our results we have both ER and H3K27ac so a more informative plot might be to overlay the two treatments in a single track for each target.
+To facilitate this, we need a *named* list of `BigwigFileList` objects and a matching *named* list of colours.
+In each of our data directories we have summarised coverage for E2 and E2DHT
 
-### Association Between Datasets
+```{r define-bwfl}
+targets <- c("ER", "H3K27ac")
+bwfl <- list(
+  ER = file.path("data", "ER", glue("{treat_levels}_cov_chr10.bw")),
+  H3K27ac = file.path("data", "H3K27ac", glue("{treat_levels}_cov_chr10.bw"))
+) %>% 
+  lapply(setNames, treat_levels) %>% 
+  lapply(BigWigFileList)
+line_colours <- lapply(bwfl, function(x) treat_colours[names(x)])
+```
 
-### Regions in Contex
+Now we have our track setup, we'll load the cytogenetic bands provided with `extraChIPs` to ensure we have a band at the top of the plot, although this too is optional.
 
+```{r load-cytobands}
+data("grch37.cytobands")
+```
+
+And finally, let's select our first range as the most highly ranked site for change ER binding, which also appears to show an increase in H3K27ac signal
+
+```{r choose-sig-ranges}
+gr <- both_results %>% 
+  mapGrlCols(
+    var = c("region", "status", "FDR"), collapse = "gene_name"
+  ) %>% 
+  arrange(ER_FDR) %>% 
+  .[1]
+```
+
+Now we pass all of these to `plotHFGC()` zooming out a little to try and get some kind of wider context.
+
+```{r plot-hfgc-default, fig.cap = "Default plot from plotHFGC showing both ER and H3K27ac signal on separate tracks, with the two treatment groups overlaid as separately coloured lines."}
+plotHFGC(
+  gr, cytobands = grch37.cytobands, 
+  features = regions, featcol = region_colours,
+  genes = gene_models, genecol = "wheat", 
+  coverage =  bwfl, linecol = line_colours,
+  zoom = 10
+)
+```
+
+One helpful feature of is the ability to annotate our coverage tracks to indicate statistical significance.
+If we simply split our initial set of results into `GRangesList` objects based on their status, we can use these to add coloured bars above our coverage tracks to denote that signal was detected there, and what the results from analysis were.
+We can simply pass our vector of status colours that we've already defined for these
+
+
+```{r cov-annot}
+cov_annot <- list(
+  ER = splitAsList(er_results, er_results$status),
+  H3K27ac = splitAsList(h3k_results, h3k_results$status)
+)
+```
+
+Now let's add these annotations and tweak the appearance of the plot
+
+```{r plot-hfgc-final, fig.cap = "Customised output from plotHFGC, adding annotations for each site as well as tweaking the labels and font sizes"}
+plotHFGC(
+  gr, cytobands = grch37.cytobands, 
+  features = regions, featcol = region_colours, featstack = "dense",
+  genes = gene_models, genecol = "wheat",
+  coverage =  bwfl, linecol = line_colours,
+  annotation = cov_annot, annotcol = status_colours,
+  zoom = 10, featsize = 2, title.width = 0.9, 
+  cex.axis = 1, cex.title = 1, rotation.title = 90,  fontsize = 12
+)
+```
+
+Just like we were able to provide a separate `BigWigFileList` to indicate separate tracks for our targets, we can use a similar strategy for the genes and features tracks.
+
+1. A `GRangesList` of gene will draw each element on a separate track. This may be useful for indicating results from a Differential Gene Expression analysis by plotting up-regulated and down-regulated genes on separate tracks in different colours
+2. Passing a *named* list of `GRangesList` objects to the features track will add each element of the list as a separate tracks. In this way you may wish to add multiple features, such as a `chromHMM` track along with CTCF or other known binding sites.
+
+## Profile Heatmaps
+
+A final way of visualising results may be to draw a Profile Heatmap, where we show coverage or fold-enrichment over background in the surrounding regions.
+Instead of separating our `BigWigFileList` into separate tracks, let's just use a single `BigWigFileList` with coverage for both ER and H3K27ac.
+
+```{r profile-bwfl}
+profile_bwfl <- bwfl %>% 
+  lapply(path) %>% 
+  unlist() %>% 
+  setNames(str_replace_all(names(.), "\\.", " ")) %>% 
+  BigWigFileList()
+```
+
+Given we only have a small dataset, let's just choose the top 20 sites by logFC in the ER dataset, and draw Profile Heatmaps for both targets.
+We first make a call to `getProfileData()` which smooths the data into bins around the site
+
+```{r profile-data}
+er_sig <- arrange(er_results, -logFC)[1:20]
+pd <- getProfileData(profile_bwfl, er_sig)
+```
+
+We can now pass this to `plotProfileHeatmap()` and can use any of the categorical columns in the original set of ranges to facet our results.
+Here we'll facet by status in the ER dataset, which will also draw lines in separate colours.
+
+```{r plot-profile-heatmaps, fig.cap = "Profile Heatmap for the 20 most highly ranked sites for increased ER binding. Ranges are centred around the ER binding patterns. The double peak seen earlier in the output from plotHFGC is at the top of the first panel.`"}
+plotProfileHeatmap(pd, "profile_data", facetY = "status") +
+  scale_colour_manual(values = status_colours) +
+  scale_fill_gradient(low = "white", high = "red") +
+  labs(fill = "logCPM")
+```
+
+A complete dataset would provide a far cleaner set of results, but we can still see the general increases in ER signal and how these relate to H3K27ac signal.
 
 
 # References {.unnumbered}
