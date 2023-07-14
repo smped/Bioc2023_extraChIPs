@@ -43,6 +43,9 @@ The focus is on:
 The package was developed to utilise *existing* S4 Object Classes and behave in a *tidy-friendly manner*, whilst not being strictly designed under tidy programming guidelines.
 Some functions may be analogous to those in existing packages, but the aim is to be simple and intuitive to use, whilst simplifying high-performance analyses.
 Previous work by the authors of DiffBind [@DiffBind2012] and csaw [@csaw2016] has been instrumental in the package design, along with the tidyverse [@tidyverse2019] and edgeR [@edgeRQLF2016].
+The intention of the package is to integrate easily with these packages, wrap multiple functions where appropriate, and provide new tools for both visualisation and working with results.
+
+The talk accompanying this material can be found [here](Bioc2023_presentation.html)
 
 ## Data and Workshop Setup
 
@@ -86,7 +89,7 @@ theme_set(theme_bw())
 ```
 
 
-Data can be obtained from [here]() and should be placed in a folder called `data` within your current working directory.
+Data can be obtained from [here](https://github.com/smped/extraChIPs_demo_data) and should be placed in a folder called `data` within your current working directory.
 This data has been pre-processed [here](https://github.com/smped/PRJNA509779) using the prepareChIPs workflow [@pederson_2023], and subset to a region on Chromosome 10 for easier working in today's context.
 
 The two targets in this dataset are the Estrogen Receptor (ER$\alpha$) and the histone mark H3K27ac.
