@@ -11,7 +11,7 @@
   <meta name="generator" content="quarto-1.3.353">
 
   <meta name="author" content="Stevie Pederson">
-  <meta name="dcterms.date" content="2023-07-14">
+  <meta name="dcterms.date" content="2023-08-03">
   <title>Bioc2023</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -30,7 +30,91 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
-  </style>
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+    /* CSS for citations */
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+    }
+    .hanging-indent div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }  </style>
   <link rel="stylesheet" href="Bioc2023_presentation_files/libs/revealjs/dist/theme/quarto.css">
   <link href="Bioc2023_presentation_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="Bioc2023_presentation_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
@@ -325,8 +409,9 @@
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" class="quarto-title-block center">
+<section id="title-slide" data-background-color="#3c3c44" data-background-image="https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/extraChIPs/extraChIPs.png" data-background-opacity="20%" data-background-position="50% 50%" data-background-size="35%" class="quarto-title-block center">
   <h1 class="title">Bioc2023</h1>
+  <p class="subtitle">extraChIPs: Package Demonstration</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -336,30 +421,738 @@ Stevie Pederson
 </div>
 </div>
 
-  <p class="date">2023-07-14</p>
+  <p class="date">August 3, 2023</p>
 </section>
-<section id="quarto" class="slide level2">
-<h2>Quarto</h2>
-<p>Quarto enables you to weave together content and executable code into a finished presentation. To learn more about Quarto presentations see <a href="https://quarto.org/docs/presentations/" class="uri">https://quarto.org/docs/presentations/</a>.</p>
+<section>
+<section id="introduction" class="title-slide slide level1 center" data-background-color="#3c3c44">
+<h1>Introduction</h1>
+
 </section>
-<section id="bullets" class="slide level2">
-<h2>Bullets</h2>
-<p>When you click the <strong>Render</strong> button a document will be generated that includes:</p>
+<section id="who-am-i" class="slide level2">
+<h2>Who Am I?</h2>
 <ul>
-<li>Content authored with markdown</li>
-<li>Output from executable code</li>
+<li>Postdoctoral Bioinformatician at Black Ochre Data Laboratories
+<ul>
+<li>Telethon Kids Institute, Adelaide, Australia</li>
+<li>Traditional lands of the Kaurna people</li>
+</ul></li>
+<li>Improving health outcomes for Indigenous Australians</li>
+<li>1400-strong patient cohort
+<ul>
+<li>Genomics, Epigenomics, Transcriptomics, Proteomics etc</li>
+</ul></li>
 </ul>
 </section>
-<section id="code" class="slide level2">
-<h2>Code</h2>
-<p>When you click the <strong>Render</strong> button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:</p>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<section id="who-am-i-1" class="slide level2">
+<h2>Who Am I?</h2>
+<ul>
+<li>Previously in Dame Roma Mitchell Cancer Research Laboratories
+<ul>
+<li>Integrating multiple ChIP targets across multiple cell lines</li>
+<li>Dynamics of AR activation with DHT (or SARMs)</li>
+<li>Often with HiC + RNA-Seq</li>
+</ul></li>
+<li>Led to the devlopment of <code>extraChIPs</code></li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Also the developer/maintainer of <code>ngsReports</code> <img data-src="https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/ngsReports/ngsReports.png" style="width:20.0%"></li>
+</ul>
 </div>
+</section>
+<section id="why-extrachips" class="slide level2">
+<h2>Why <code>extraChIPs</code></h2>
+<ul>
+<li>Filled several gaps between <code>DiffBind</code> <span class="citation" data-cites="DiffBind2012">(<a href="#/comparing-results" role="doc-biblioref" onclick="">Ross-Innes et al. 2012</a>)</span> and <code>csaw</code> <span class="citation" data-cites="csaw2016">(<a href="#/comparing-results" role="doc-biblioref" onclick="">Lun and Smyth 2016</a>)</span></li>
+<li>Simplify detection of Differential Signal</li>
+<li>Enable easier comparison across multiple targets</li>
+<li>Key visualisation tools, core infrastructure + simplified workflows</li>
+<li>All processed designed for existing object classes:
+<ul>
+<li><code>GRanges</code>, <code>GRangesList</code>, <code>SummarizedExperiment</code></li>
+</ul></li>
+<li>Hopefully useful well beyond ChIP-Seq (DNA-methylation, ATAC-Seq etc)</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Built to enable the GRAVI snakemake workflow:
+<ul>
+<li>Gene Regulatory Analysis using Variable Inputs</li>
+</ul></li>
+</ul>
 </div>
-<div class="footer footer-default">
+</section></section>
+<section>
+<section id="core-infrastructure" class="title-slide slide level1 center" data-background-color="#3c3c44" data-background-image="https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/extraChIPs/extraChIPs.png" data-background-size="35%" data-background-opacity="0.2">
+<h1>Core Infrastructure</h1>
 
+</section>
+<section id="mc-functions" class="slide level2">
+<h2>*MC Functions</h2>
+<ul>
+<li>Existing functions <code>reduce</code>, <code>setdiff</code>, <code>intersect</code>, <code>union</code>
+<ul>
+<li>All will drop information in the <code>mcols</code> element</li>
+</ul></li>
+<li><code>reduceMC</code>, <code>setdiffMC</code>, <code>intersectMC</code> and <code>unionMC</code>
+<ul>
+<li>Will retain all information in <code>mcols</code> element</li>
+</ul></li>
+<li>Also introduces <code>chopMC</code> and <code>distinctMC</code>
+<ul>
+<li>Based on <code>tidyverse</code> functions <span class="citation" data-cites="tidyverse2019">(<a href="#/comparing-results" role="doc-biblioref" onclick="">Wickham et al. 2019</a>)</span></li>
+</ul></li>
+<li>Regularly used internally</li>
+</ul>
+</section>
+<section id="reducemc" class="slide level2">
+<h2>reduceMC</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 2 ranges and 1 metadata column:
+      seqnames    ranges strand |          id
+         &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
+  [1]     chr1      1-10      * |      range1
+  [2]     chr1      6-12      * |      range2
+  -------
+  seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+</div>
+</div>
+<div class="fragment">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">reduce</span>(x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 1 range and 0 metadata columns:
+      seqnames    ranges strand
+         &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+  [1]     chr1      1-12      *
+  -------
+  seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+</div>
+</div>
+</div>
+<div class="fragment">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">reduceMC</span>(x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 1 range and 1 metadata column:
+      seqnames    ranges strand |              id
+         &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;CharacterList&gt;
+  [1]     chr1      1-12      * |   range1,range2
+  -------
+  seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="tibble-coercion" class="slide level2">
+<h2><code>tibble</code> Coercion</h2>
+<ul>
+<li><code>GRanges</code> can be coerced to <code>tibble</code> objects</li>
+<li>Ranges are coerced to a <code>character</code> column</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tbl <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(x)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>tbl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  range     id    
+  &lt;chr&gt;     &lt;chr&gt; 
+1 chr1:1-10 range1
+2 chr1:6-12 range2</code></pre>
+</div>
+</div>
+<ul>
+<li><code>rangeAsChar = FALSE</code> will produce same columns as <code>as.data.frame</code></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tibble</span>(x, <span class="at">rangeAsChar =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 6
+  seqnames start   end width strand id    
+  &lt;fct&gt;    &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;fct&gt;  &lt;chr&gt; 
+1 chr1         1    10    10 *      range1
+2 chr1         6    12     7 *      range2</code></pre>
+</div>
+</div>
+</section>
+<section id="coercing-tibble-objects-back-to-granges" class="slide level2">
+<h2>Coercing <code>tibble</code> objects back to <code>GRanges</code></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>tbl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  range     id    
+  &lt;chr&gt;     &lt;chr&gt; 
+1 chr1:1-10 range1
+2 chr1:6-12 range2</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colToRanges</span>(tbl, <span class="at">var =</span> <span class="st">"range"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 2 ranges and 1 metadata column:
+      seqnames    ranges strand |          id
+         &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
+  [1]     chr1      1-10      * |      range1
+  [2]     chr1      6-12      * |      range2
+  -------
+  seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+</div>
+</div>
+<ul>
+<li>Seqinfo objects can also be passed via this function</li>
+</ul>
+</section>
+<section id="coltoranges" class="slide level2">
+<h2><code>colToRanges()</code></h2>
+<ul>
+<li><code>colToRanges</code> also enables <code>GRanges</code> objects in the <code>mcols</code> element to become the ‘backbone’ ranges</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>x<span class="sc">$</span>centre <span class="ot">&lt;-</span> <span class="fu">GRanges</span>(<span class="fu">paste0</span>(<span class="st">"chr1:"</span>, <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>)))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 2 ranges and 2 metadata columns:
+      seqnames    ranges strand |          id    centre
+         &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;GRanges&gt;
+  [1]     chr1      1-10      * |      range1    chr1:5
+  [2]     chr1      6-12      * |      range2   chr1:10
+  -------
+  seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colToRanges</span>(x, <span class="at">var =</span> <span class="st">"centre"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 2 ranges and 1 metadata column:
+      seqnames    ranges strand |          id
+         &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
+  [1]     chr1         5      * |      range1
+  [2]     chr1        10      * |      range2
+  -------
+  seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+</div>
+</div>
+</section>
+<section id="defineregions" class="slide level2">
+<h2><code>defineRegions()</code></h2>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">defineRegions</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  genes,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  transcripts,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  exons,</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">promoter =</span> <span class="fu">c</span>(<span class="dv">2500</span>, <span class="dv">500</span>),</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">upstream =</span> <span class="dv">5000</span>,</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">intron =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">proximal =</span> <span class="dv">10000</span>,</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">simplify =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">cols =</span> <span class="fu">c</span>(<span class="st">"gene_id"</span>, <span class="st">"gene_name"</span>, <span class="st">"transcript_id"</span>, <span class="st">"transcript_name"</span>),</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>Genomic Regions can be defined <em>hierachically</em> using a supplied gtf</li>
+<li><ol type="1">
+<li>Promoters; 2) Upstream Promoters; 3) Exons; 4) Introns; 5) Proximal Intergenic; and 6) Distal Intergenic</li>
+</ol>
+<ul>
+<li>Exons/Introns can be collapsed into ‘Gene Body’ (<code>intron = FALSE</code>)</li>
+<li>Intergenic Regions can also be merged (<code>proximal = 0</code>)</li>
+</ul></li>
+<li>All distances are able to be set manually</li>
+</ul>
+</section>
+<section id="defineregions-1" class="slide level2">
+<h2><code>defineRegions()</code></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>regions <span class="ot">&lt;-</span> <span class="fu">defineRegions</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">genes =</span> gtf<span class="sc">$</span>gene, <span class="at">transcripts =</span> gtf<span class="sc">$</span>transcript, <span class="at">exons =</span> gtf<span class="sc">$</span>exon</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>regions</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRangesList object of length 6:
+$promoter
+GRanges object with 3359 ranges and 5 metadata columns:
+         seqnames              ranges strand |                region
+            &lt;Rle&gt;           &lt;IRanges&gt;  &lt;Rle&gt; |           &lt;character&gt;
+     [1]    chr10         61989-64988      * | Promoter (-2500/+500)
+     [2]    chr10         66360-69392      * | Promoter (-2500/+500)
+     [3]    chr10         88152-91151      * | Promoter (-2500/+500)
+     [4]    chr10         94710-97961      * | Promoter (-2500/+500)
+     [5]    chr10       119604-122603      * | Promoter (-2500/+500)
+     ...      ...                 ...    ... .                   ...
+  [3355]    chr10 135488075-135491074      * | Promoter (-2500/+500)
+  [3356]    chr10 135491384-135494383      * | Promoter (-2500/+500)
+  [3357]    chr10 135494684-135497683      * | Promoter (-2500/+500)
+  [3358]    chr10 135503135-135506134      * | Promoter (-2500/+500)
+  [3359]    chr10 135513071-135518323      * | Promoter (-2500/+500)
+                                                                 gene_id
+                                                         &lt;CharacterList&gt;
+     [1]                                            ENSG00000260370.2_11
+     [2]  ENSG00000260370.2_11,ENSG00000260370.2_11,ENSG00000260370.2_11
+     [3]                                             ENSG00000237297.1_7
+     [4] ENSG00000261456.6_7,ENSG00000261456.6_7,ENSG00000261456.6_7,...
+     [5]                                             ENSG00000261456.6_7
+     ...                                                             ...
+  [3355]                                             ENSG00000276046.1_5
+  [3356]                                             ENSG00000276904.1_5
+  [3357]                                             ENSG00000278641.1_5
+  [3358]                                               ENSG00000226880.1
+  [3359] ENSG00000213147.3_3,ENSG00000261914.2_3,ENSG00000282875.1_8,...
+                                               gene_name
+                                         &lt;CharacterList&gt;
+     [1]                                 ENSG00000260370
+     [2] ENSG00000260370,ENSG00000260370,ENSG00000260370
+     [3]                                 ENSG00000237297
+     [4]                           TUBB8,TUBB8,TUBB8,...
+     [5]                                           TUBB8
+     ...                                             ...
+  [3355]                                         DUX4L13
+  [3356]                                         DUX4L14
+  [3357]                                         DUX4L15
+  [3358]                                    XX-2136C48.7
+  [3359]         RPL23AP60,RPL23AP84,ENSG00000282875,...
+                                                           transcript_id
+                                                         &lt;CharacterList&gt;
+     [1]                                             ENST00000562162.2_4
+     [2]     ENST00000682078.1_1,ENST00000566940.2_4,ENST00000683798.1_1
+     [3]                                             ENST00000416477.1_2
+     [4] ENST00000568584.6_6,ENST00000568866.5_4,ENST00000561967.1_4,...
+     [5]                                             ENST00000564130.2_4
+     ...                                                             ...
+  [3355]                                             ENST00000554103.2_2
+  [3356]                                             ENST00000621227.1_2
+  [3357]                                             ENST00000611059.1_2
+  [3358]                                               ENST00000411632.1
+  [3359] ENST00000450011.1_2,ENST00000571193.2_2,ENST00000635574.1_4,...
+                                         transcript_name
+                                         &lt;CharacterList&gt;
+     [1]                                 ENST00000562162
+     [2] ENST00000682078,ENST00000566940,ENST00000683798
+     [3]                                 ENST00000416477
+     [4]               TUBB8-206,TUBB8-207,TUBB8-201,...
+     [5]                                       TUBB8-204
+     ...                                             ...
+  [3355]                                     DUX4L13-201
+  [3356]                                     DUX4L14-201
+  [3357]                                     DUX4L15-201
+  [3358]                                XX-2136C48.7-001
+  [3359] RPL23AP60-201,RPL23AP84-201,ENST00000635574,...
+  -------
+  seqinfo: 1 sequence from hg19 genome
+
+...
+&lt;5 more elements&gt;</code></pre>
+</div>
+</div>
+</section></section>
+<section>
+<section id="working-with-peaks" class="title-slide slide level1 center" data-background-color="#3c3c44" data-background-image="https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/extraChIPs/extraChIPs.png" data-background-size="35%" data-background-opacity="0.2">
+<h1>Working With Peaks</h1>
+
+</section>
+<section id="importing-peaks" class="slide level2">
+<h2>Importing Peaks</h2>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">importPeaks</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  x,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="fu">c</span>(<span class="st">"narrow"</span>, <span class="st">"broad"</span>),</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  blacklist,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  seqinfo,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">pruning.mode =</span> <span class="fu">c</span>(<span class="st">"coarse"</span>, <span class="st">"error"</span>),</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sort =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">setNames =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">glueNames =</span> <span class="st">"{basename(x)}"</span>,</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">centre =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">nameRanges =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>Will return a <code>GRangesList</code></li>
+<li>Only chromosomes/scaffolds within the <code>seqinfo</code> object will be returned</li>
+<li>Peak Centres can be automatically added for <code>narrowPeak</code> files</li>
+</ul>
+</section>
+<section id="importing-peaks-1" class="slide level2">
+<h2>Importing Peaks</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>fl <span class="ot">&lt;-</span> <span class="fu">glue</span>(<span class="st">"data/ER/{er_samples$accession}_peaks.narrowPeak"</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>peaks <span class="ot">&lt;-</span> <span class="fu">importPeaks</span>(fl, <span class="at">seqinfo =</span> sq, <span class="at">centre =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(peaks) <span class="ot">&lt;-</span> er_samples<span class="sc">$</span>accession</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>peaks</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRangesList object of length 6:
+$SRR8315180
+GRanges object with 126 ranges and 6 metadata columns:
+                      seqnames            ranges strand |     score signalValue
+                         &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;numeric&gt;   &lt;numeric&gt;
+  SRR8315180_peak_698    chr10 43048224-43048487      * |       251    13.91781
+  SRR8315180_peak_699    chr10 43521883-43522126      * |       223    12.88686
+  SRR8315180_peak_700    chr10 43540200-43540384      * |        58     6.18569
+  SRR8315180_peak_701    chr10 43606308-43606517      * |        92     7.73212
+  SRR8315180_peak_702    chr10 44092187-44092576      * |       251    13.91781
+                  ...      ...               ...    ... .       ...         ...
+  SRR8315180_peak_819    chr10 95796039-95796377      * |       434    18.67842
+  SRR8315180_peak_820    chr10 96089595-96089749      * |        25     4.32096
+  SRR8315180_peak_821    chr10 99097150-99097384      * |       196     9.02984
+  SRR8315180_peak_822    chr10 99168353-99168578      * |        48     5.67022
+  SRR8315180_peak_823    chr10 99331430-99331686      * |       210    10.70668
+                         pValue    qValue      peak    centre
+                      &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+  SRR8315180_peak_698  29.15643  25.19601       117  43048341
+  SRR8315180_peak_699  26.25515  22.33688       125  43522008
+  SRR8315180_peak_700   9.37883   5.87296        98  43540298
+  SRR8315180_peak_701  12.90188   9.27326       110  43606418
+  SRR8315180_peak_702  29.15643  25.19601       214  44092401
+                  ...       ...       ...       ...       ...
+  SRR8315180_peak_819  47.62759  43.44466       186  95796225
+  SRR8315180_peak_820   5.88899   2.58967         6  96089601
+  SRR8315180_peak_821  23.51470  19.64532       109  99097259
+  SRR8315180_peak_822   8.26998   4.82385       153  99168506
+  SRR8315180_peak_823  24.91666  21.02332       191  99331621
+  -------
+  seqinfo: 1 sequence from hg19 genome
+
+...
+&lt;5 more elements&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="plotoverlaps" class="slide level2">
+<h2><code>plotOverlaps()</code></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotOverlaps</span>(peaks, <span class="at">set_col =</span> treat_colours)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+
+</div>
+<img data-src="Bioc2023_presentation_files/figure-revealjs/plot-overlaps-1.png" width="960" class="r-stretch"><ul>
+<li>Calls <code>ComplexUpset::upset()</code> if n &gt;= 3 (otherwise <code>VennDiagram::draw.pairwise.venn()</code>)</li>
+<li>All arguments can be passed using <code>...</code></li>
+</ul>
+</section>
+<section id="consensus-peaks" class="slide level2">
+<h2>Consensus Peaks</h2>
+<ul>
+<li>By default, the union of ranges will be returned</li>
+<li>Any, or all columns can also be returned</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">makeConsensus</span>(peaks[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>], <span class="at">var =</span> <span class="st">"centre"</span>, <span class="at">p =</span> <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 167 ranges and 5 metadata columns:
+        seqnames            ranges strand |                     centre
+           &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |              &lt;NumericList&gt;
+    [1]    chr10 43048195-43048529      * | 43048341,43048357,43048389
+    [2]    chr10 43521739-43522260      * | 43522008,43522012,43522039
+    [3]    chr10 43540042-43540390      * |          43540298,43540245
+    [4]    chr10 43606238-43606573      * | 43606418,43606408,43606421
+    [5]    chr10 43851214-43851989      * |          43851672,43851766
+    ...      ...               ...    ... .                        ...
+  [163]    chr10 99096784-99097428      * | 99097259,99097253,99097249
+  [164]    chr10 99168353-99168649      * | 99168506,99168486,99168513
+  [165]    chr10 99207868-99208156      * |          99207995,99208002
+  [166]    chr10 99331363-99331730      * | 99331621,99331585,99331580
+  [167]    chr10 99621632-99621961      * |          99621809,99621828
+        SRR8315180 SRR8315181 SRR8315182         n
+         &lt;logical&gt;  &lt;logical&gt;  &lt;logical&gt; &lt;numeric&gt;
+    [1]       TRUE       TRUE       TRUE         3
+    [2]       TRUE       TRUE       TRUE         3
+    [3]       TRUE      FALSE       TRUE         2
+    [4]       TRUE       TRUE       TRUE         3
+    [5]      FALSE       TRUE       TRUE         2
+    ...        ...        ...        ...       ...
+  [163]       TRUE       TRUE       TRUE         3
+  [164]       TRUE       TRUE       TRUE         3
+  [165]      FALSE       TRUE       TRUE         2
+  [166]       TRUE       TRUE       TRUE         3
+  [167]      FALSE       TRUE       TRUE         2
+  -------
+  seqinfo: 1 sequence from hg19 genome</code></pre>
+</div>
+</div>
+</section>
+<section id="consensus-peaks-1" class="slide level2">
+<h2>Consensus Peaks</h2>
+<ul>
+<li>Can also return ranges based on coverage between samples</li>
+<li>Narrower, but consistently ‘covered’ ranges</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">makeConsensus</span>(peaks[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>], <span class="at">var =</span> <span class="st">"centre"</span>, <span class="at">method =</span> <span class="st">"coverage"</span>, <span class="at">p =</span> <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 167 ranges and 5 metadata columns:
+        seqnames            ranges strand |                     centre
+           &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |              &lt;NumericList&gt;
+    [1]    chr10 43048224-43048519      * | 43048341,43048357,43048389
+    [2]    chr10 43521773-43522218      * | 43522008,43522012,43522039
+    [3]    chr10 43540200-43540384      * |          43540298,43540245
+    [4]    chr10 43606264-43606559      * | 43606418,43606408,43606421
+    [5]    chr10 43851570-43851940      * |          43851672,43851766
+    ...      ...               ...    ... .                        ...
+  [163]    chr10 99097038-99097398      * | 99097259,99097253,99097249
+  [164]    chr10 99168367-99168608      * | 99168506,99168486,99168513
+  [165]    chr10 99207908-99208139      * |          99207995,99208002
+  [166]    chr10 99331412-99331687      * | 99331621,99331585,99331580
+  [167]    chr10 99621674-99621944      * |          99621809,99621828
+        SRR8315180 SRR8315181 SRR8315182         n
+         &lt;logical&gt;  &lt;logical&gt;  &lt;logical&gt; &lt;numeric&gt;
+    [1]       TRUE       TRUE       TRUE         3
+    [2]       TRUE       TRUE       TRUE         3
+    [3]       TRUE      FALSE       TRUE         2
+    [4]       TRUE       TRUE       TRUE         3
+    [5]      FALSE       TRUE       TRUE         2
+    ...        ...        ...        ...       ...
+  [163]       TRUE       TRUE       TRUE         3
+  [164]       TRUE       TRUE       TRUE         3
+  [165]      FALSE       TRUE       TRUE         2
+  [166]       TRUE       TRUE       TRUE         3
+  [167]      FALSE       TRUE       TRUE         2
+  -------
+  seqinfo: 1 sequence from hg19 genome</code></pre>
+</div>
+</div>
+</section>
+<section id="mapping-peaks" class="slide level2">
+<h2>Mapping Peaks</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>union_peaks</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 191 ranges and 3 metadata columns:
+        seqnames            ranges strand |        E2     E2DHT         n
+           &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;logical&gt; &lt;logical&gt; &lt;numeric&gt;
+    [1]    chr10 43048195-43048529      * |      TRUE      TRUE         2
+    [2]    chr10 43521739-43522260      * |      TRUE      TRUE         2
+    [3]    chr10 43540042-43540457      * |      TRUE      TRUE         2
+    [4]    chr10 43606184-43606573      * |      TRUE      TRUE         2
+    [5]    chr10 43851214-43851989      * |      TRUE     FALSE         1
+    ...      ...               ...    ... .       ...       ...       ...
+  [187]    chr10 99168349-99168690      * |      TRUE      TRUE         2
+  [188]    chr10 99207862-99208157      * |      TRUE      TRUE         2
+  [189]    chr10 99331323-99331741      * |      TRUE      TRUE         2
+  [190]    chr10 99340107-99340354      * |     FALSE      TRUE         1
+  [191]    chr10 99621632-99621988      * |      TRUE      TRUE         2
+  -------
+  seqinfo: 1 sequence from hg19 genome</code></pre>
+</div>
+</div>
+<p>After finding consensus peaks for both treatments in this dataset (E2, E2DHT):</p>
+<ol type="1">
+<li>Map to regions using <code>bestOverlap()</code></li>
+<li>Map to genes using <code>mapByFeature()</code></li>
+</ol>
+</section>
+<section id="bestoverlap" class="slide level2">
+<h2><code>bestOverlap()</code></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>union_peaks<span class="sc">$</span>region <span class="ot">&lt;-</span> <span class="fu">bestOverlap</span>(union_peaks, <span class="fu">unlist</span>(regions), <span class="at">var =</span> <span class="st">"region"</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>union_peaks</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 191 ranges and 4 metadata columns:
+        seqnames            ranges strand |        E2     E2DHT         n
+           &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;logical&gt; &lt;logical&gt; &lt;numeric&gt;
+    [1]    chr10 43048195-43048529      * |      TRUE      TRUE         2
+    [2]    chr10 43521739-43522260      * |      TRUE      TRUE         2
+    [3]    chr10 43540042-43540457      * |      TRUE      TRUE         2
+    [4]    chr10 43606184-43606573      * |      TRUE      TRUE         2
+    [5]    chr10 43851214-43851989      * |      TRUE     FALSE         1
+    ...      ...               ...    ... .       ...       ...       ...
+  [187]    chr10 99168349-99168690      * |      TRUE      TRUE         2
+  [188]    chr10 99207862-99208157      * |      TRUE      TRUE         2
+  [189]    chr10 99331323-99331741      * |      TRUE      TRUE         2
+  [190]    chr10 99340107-99340354      * |     FALSE      TRUE         1
+  [191]    chr10 99621632-99621988      * |      TRUE      TRUE         2
+                        region
+                   &lt;character&gt;
+    [1]  Promoter (-2500/+500)
+    [2]     Intergenic (&gt;10kb)
+    [3]     Intergenic (&gt;10kb)
+    [4]                 Intron
+    [5]     Intergenic (&lt;10kb)
+    ...                    ...
+  [187]                 Intron
+  [188]  Promoter (-2500/+500)
+  [189]  Promoter (-2500/+500)
+  [190] Upstream Promoter (-..
+  [191] Upstream Promoter (-..
+  -------
+  seqinfo: 1 sequence from hg19 genome</code></pre>
+</div>
+</div>
+</section>
+<section id="mapbyfeature" class="slide level2">
+<h2><code>mapByFeature()</code></h2>
+<p>Maps to genes using ranges separately defined as <em>promoters</em>, <em>enhancers</em> or <em>long-range interactions</em></p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mapByFeature</span>(</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  gr,</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  genes,</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  prom,</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  enh,</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  gi,</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">cols =</span> <span class="fu">c</span>(<span class="st">"gene_id"</span>, <span class="st">"gene_name"</span>, <span class="st">"symbol"</span>),</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">gr2prom =</span> <span class="dv">0</span>,</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">gr2enh =</span> <span class="dv">0</span>,</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">gr2gi =</span> <span class="dv">0</span>,</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">gr2gene =</span> <span class="fl">1e+05</span>,</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">prom2gene =</span> <span class="dv">0</span>,</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">enh2gene =</span> <span class="fl">1e+05</span>,</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">gi2gene =</span> <span class="dv">0</span>,</span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="mapbyfeature-1" class="slide level2">
+<h2><code>mapByFeature()</code></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mapByFeature</span>(union_peaks, <span class="at">genes =</span> gtf<span class="sc">$</span>gene, <span class="at">prom =</span> regions<span class="sc">$</span>promoter)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>GRanges object with 191 ranges and 6 metadata columns:
+        seqnames            ranges strand |        E2     E2DHT         n
+           &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;logical&gt; &lt;logical&gt; &lt;numeric&gt;
+    [1]    chr10 43048195-43048529      * |      TRUE      TRUE         2
+    [2]    chr10 43521739-43522260      * |      TRUE      TRUE         2
+    [3]    chr10 43540042-43540457      * |      TRUE      TRUE         2
+    [4]    chr10 43606184-43606573      * |      TRUE      TRUE         2
+    [5]    chr10 43851214-43851989      * |      TRUE     FALSE         1
+    ...      ...               ...    ... .       ...       ...       ...
+  [187]    chr10 99168349-99168690      * |      TRUE      TRUE         2
+  [188]    chr10 99207862-99208157      * |      TRUE      TRUE         2
+  [189]    chr10 99331323-99331741      * |      TRUE      TRUE         2
+  [190]    chr10 99340107-99340354      * |     FALSE      TRUE         1
+  [191]    chr10 99621632-99621988      * |      TRUE      TRUE         2
+                        region                                    gene_id
+                   &lt;character&gt;                            &lt;CharacterList&gt;
+    [1]  Promoter (-2500/+500)   ENSG00000234420.9_10,ENSG00000270762.1_3
+    [2]     Intergenic (&gt;10kb)                          ENSG00000263795.1
+    [3]     Intergenic (&gt;10kb)                      ENSG00000165731.21_15
+    [4]                 Intron                      ENSG00000165731.21_15
+    [5]     Intergenic (&lt;10kb)                        ENSG00000285712.1_7
+    ...                    ...                                        ...
+  [187]                 Intron ENSG00000052749.14_14,ENSG00000231970.1_10
+  [188]  Promoter (-2500/+500) ENSG00000171311.13_12,ENSG00000171307.19_9
+  [189]  Promoter (-2500/+500)                      ENSG00000165887.12_14
+  [190] Upstream Promoter (-..                      ENSG00000165887.12_14
+  [191] Upstream Promoter (-..                       ENSG00000155265.11_7
+                    gene_name
+              &lt;CharacterList&gt;
+    [1]       ZNF37BP,FXYD6P1
+    [2]               MIR5100
+    [3]                   RET
+    [4]                   RET
+    [5]       ENSG00000285712
+    ...                   ...
+  [187] RRP12,ENSG00000231970
+  [188]        EXOSC1,ZDHHC16
+  [189]                ANKRD2
+  [190]                ANKRD2
+  [191]               GOLGA7B
+  -------
+  seqinfo: 1 sequence from hg19 genome</code></pre>
+</div>
+</div>
+</section></section>
+<section>
+<section id="differential-signal-analysis" class="title-slide slide level1 center" data-background-color="#3c3c44">
+<h1>Differential Signal Analysis</h1>
+
+</section>
+<section id="two-approaches-to-differential-signal" class="slide level2">
+<h2>Two approaches to Differential Signal</h2>
+<h3 id="fixed-width-analaysis">Fixed-Width Analaysis</h3>
+<ul>
+<li>Highly Comparable to <code>DiffBind</code></li>
+<li>Define a set of fixed-width ranges:
+<ul>
+<li>Use centres from <code>importPeaks()</code> after running <code>makeConsensus()</code></li>
+</ul></li>
+<li>Count Reads using <code>csaw::regionCounts()</code> <span class="math inline">\(\implies\)</span> <code>RangedSummarizedEperiment</code></li>
+</ul>
+</section>
+<section id="two-approaches-to-differential-signal-1" class="slide level2">
+<h2>Two approaches to Differential Signal</h2>
+<h3 id="sliding-windows">Sliding Windows</h3>
+<ul>
+<li>Based on <code>csaw</code></li>
+<li>Final signal for merged ranges:
+<ul>
+<li><code>csaw</code> methods: <code>mergeByCol()</code>, <code>mergeBySig()</code></li>
+<li>Return as merged ranges with an additional range as the <em>key-value range</em></li>
+</ul></li>
+<li>Merge using the Harmonic Mean p-values
+<ul>
+<li><code>mergeByHMP()</code></li>
+<li>logFC and logCPM values are weighted averages based in sliding window p-values</li>
+<li>Key-value ranges can be 1) Lowest p-value or 2) All ranges below the HMP</li>
+</ul></li>
+</ul>
+</section>
+<section id="fitassaydiff" class="slide level2">
+<h2><code>fitAssayDiff()</code></h2>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fitAssayDiff</span>(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  x, <span class="at">assay =</span> <span class="st">"counts"</span>,</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">design =</span> <span class="cn">NULL</span>, <span class="at">coef =</span> <span class="cn">NULL</span>,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">lib.size =</span> <span class="st">"totals"</span>,</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="fu">c</span>(<span class="st">"qlf"</span>, <span class="st">"lt"</span>),</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">norm =</span> <span class="fu">c</span>(<span class="st">"none"</span>, <span class="st">"TMM"</span>, <span class="st">"RLE"</span>, <span class="st">"TMMwsp"</span>, <span class="st">"upperquartile"</span>),</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">groups =</span> <span class="cn">NULL</span>,</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">fc =</span> <span class="dv">1</span>, <span class="at">lfc =</span> <span class="fu">log2</span>(fc),</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">asRanges =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">offset =</span> <span class="cn">NULL</span>,</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">null =</span> <span class="fu">c</span>(<span class="st">"interval"</span>, <span class="st">"worst.case"</span>),</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">weighted =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>Calls <code>edgeR::glmQLFit</code> methods <span class="citation" data-cites="edgeRQLF2016">(<a href="#/comparing-results" role="doc-biblioref" onclick="">Chen, Lun, and Smyth 2016</a>)</span></li>
+<li>Also calls <code>limma-trend</code> if fitting logCPM values <span class="citation" data-cites="Law2014-xq">(<a href="#/comparing-results" role="doc-biblioref" onclick="">Law et al. 2014</a>)</span></li>
+<li>Can apply range-based H<sub>0</sub> <span class="citation" data-cites="McCarthy2009-qf">(<a href="#/comparing-results" role="doc-biblioref" onclick="">McCarthy and Smyth 2009</a>)</span></li>
+<li>Optionally normalise <em>within treatment groups</em> (<code>groups = "treat"</code>)</li>
+<li>Library sizes can be set as colSums (<code>lib.size = NULL</code>)</li>
+</ul>
+</section>
+<section id="mergebyhmp" class="slide level2">
+<h2><code>mergeByHMP()</code></h2>
+<ul>
+<li>Uses the <em>asmyptotically exact</em> harmonic-mean p <span class="citation" data-cites="Wilson2019-ln">(<a href="#/comparing-results" role="doc-biblioref" onclick="">Wilson 2019</a>)</span></li>
+<li>Controls the <code>FDR</code> similarly to <code>Simes</code> method (<code>csaw</code>)</li>
+<li>Also has strict <code>FWER</code> control (<code>p_adj_method = "fwer"</code>)</li>
+</ul>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mergeByHMP</span>(</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  x,</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">df =</span> <span class="cn">NULL</span>,</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">w =</span> <span class="cn">NULL</span>,</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">logfc =</span> <span class="st">"logFC"</span>,</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">pval =</span> <span class="st">"P"</span>,</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">cpm =</span> <span class="st">"logCPM"</span>,</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">inc_cols =</span> <span class="cn">NULL</span>,</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_adj_method =</span> <span class="st">"fdr"</span>,</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">merge_within =</span> 1L,</span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">ignore_strand =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">min_win =</span> <span class="dv">1</span>,</span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">keyval =</span> <span class="fu">c</span>(<span class="st">"min"</span>, <span class="st">"merged"</span>),</span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section></section>
+<section id="comparing-results" class="title-slide slide level1 smaller scrollable" data-background-color="#3c3c44">
+<h1>Comparing Results</h1>
+
+<img src="assets/bodl_logo_white_background.jpg" class="slide-logo r-stretch"><div class="footer footer-default">
+
+</div>
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-edgeRQLF2016" class="csl-entry" role="listitem">
+Chen, Yunshun, Aaron A T Lun, and Gordon K Smyth. 2016. <span>“From Reads to Genes to Pathways: Differential Expression Analysis of RNA-Seq Experiments Using Rsubread and the edgeR Quasi-Likelihood Pipeline.”</span> <em>F1000Research</em> 5: 1438. <a href="https://doi.org/10.12688/f1000research.8987.2">https://doi.org/10.12688/f1000research.8987.2</a>.
+</div>
+<div id="ref-Law2014-xq" class="csl-entry" role="listitem">
+Law, Charity W, Yunshun Chen, Wei Shi, and Gordon K Smyth. 2014. <span>“Voom: Precision Weights Unlock Linear Model Analysis Tools for <span class="nocase">RNA-seq</span> Read Counts.”</span> <em>Genome Biol.</em> 15 (2): R29.
+</div>
+<div id="ref-csaw2016" class="csl-entry" role="listitem">
+Lun, Aaron T L, and Gordon K Smyth. 2016. <span>“Csaw: A <span>B</span>ioconductor Package for Differential Binding Analysis of <span>C</span>h<span>I</span><span>P</span>-Seq Data Using Sliding Windows.”</span> <em>Nucleic Acids Res.</em> 44 (5): e45.
+</div>
+<div id="ref-McCarthy2009-qf" class="csl-entry" role="listitem">
+McCarthy, Davis J, and Gordon K Smyth. 2009. <span>“Testing Significance Relative to a Fold-Change Threshold Is a <span>TREAT</span>.”</span> <em>Bioinformatics</em> 25 (6): 765–71.
+</div>
+<div id="ref-DiffBind2012" class="csl-entry" role="listitem">
+Ross-Innes, Caryn S., Rory Stark, Andrew E. Teschendorff, Kelly A. Holmes, H. Raza Ali, Mark J. Dunning, Gordon D. Brown, et al. 2012. <span>“Differential Oestrogen Receptor Binding Is Associated with Clinical Outcome in Breast Cancer.”</span> <em>Nature</em> 481: –4. <a href="http://www.nature.com/nature/journal/v481/n7381/full/nature10730.html">http://www.nature.com/nature/journal/v481/n7381/full/nature10730.html</a>.
+</div>
+<div id="ref-tidyverse2019" class="csl-entry" role="listitem">
+Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy D’Agostino McGowan, Romain François, Garrett Grolemund, et al. 2019. <span>“Welcome to the <span class="nocase">tidyverse</span>.”</span> <em>Journal of Open Source Software</em> 4 (43): 1686. <a href="https://doi.org/10.21105/joss.01686">https://doi.org/10.21105/joss.01686</a>.
+</div>
+<div id="ref-Wilson2019-ln" class="csl-entry" role="listitem">
+Wilson, Daniel J. 2019. <span>“The Harmonic Mean <em>p</em>-Value for Combining Dependent Tests.”</span> <em>Proc. Natl. Acad. Sci. U. S. A.</em> 116 (4): 1195–1200.
+</div>
 </div>
 </section>
     </div>
@@ -539,9 +1332,9 @@ Stevie Pederson
         // The "normal" size of the presentation, aspect ratio will be preserved
         // when the presentation is scaled to fit different resolutions. Can be
         // specified using percentage units.
-        width: 1050,
+        width: 1024,
 
-        height: 700,
+        height: 768,
 
         // Factor of the display size that should remain empty around the content
         margin: 0.1,
