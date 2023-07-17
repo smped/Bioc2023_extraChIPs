@@ -37,6 +37,8 @@ library(extraChIPs)
 library(glue)
 library(rtracklayer)
 library(plyranges)
+library(Rsamtools)
+theme_set(theme_bw())
 ```
 
 
@@ -44,37 +46,59 @@ library(plyranges)
 
 - Postdoctoral Bioinformatician at Black Ochre Data Laboratories
     + Telethon Kids Institute, Adelaide, Australia
-    + Traditional lands of the Kaurna people
+    + Traditional lands of the Kaurna nation
 - Improving health outcomes for Indigenous Australians
 - 1400-strong patient cohort
-    + Genomics, Epigenomics, Transcriptomics, Proteomics etc
+    + Type 2 Diabetes, Cardiovascular Disease, Chronic Kidney Disease
+    + Genomics, Epigenomics, Transcriptomics, Proteomics, Lipidomics etc
 
 ## Who Am I?
 
-- Previously in Dame Roma Mitchell Cancer Research Laboratories
+- Bioinformatics Hub at University of Adelaide (2014-2020)
+- Dame Roma Mitchell Cancer Research Laboratories (UofA, 2020-2022)
     + Integrating multiple ChIP targets across multiple cell lines
-    + Dynamics of AR activation with DHT (or SARMs)
-    + Often with HiC + RNA-Seq
-- Led to the devlopment of `extraChIPs`
+    + Regulatory dynamics of AR activation with DHT (or SARMs)
+- Led to the development of `extraChIPs`
     
 . . .
 
-- Also the developer/maintainer of `ngsReports` ![](https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/ngsReports/ngsReports.png){width="20%"}
+- Also the developer/maintainer of `ngsReports` 
 
-## Why `extraChIPs`
+![](https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/ngsReports/ngsReports.png){width="20%" fig-align="right"}
 
+## Why `extraChIPs`?
+
+
+- Built to enable the GRAVI workflow:
+    + Gene Regulatory Analysis using Variable Inputs (snakemake)
+    + Integration of multiple ChIP targets with RNA-Seq + HiC
+    + Design evolved alongside GRAVI
+    
+. . .
+    
 - Filled several gaps between `DiffBind` [@DiffBind2012] and `csaw` [@csaw2016]
-- Simplify detection of Differential Signal
-- Enable easier comparison across multiple targets
-- Key visualisation tools, core infrastructure + simplified workflows
-- All processed designed for existing object classes:
-    + `GRanges`, `GRangesList`, `SummarizedExperiment`
-- Hopefully useful well beyond ChIP-Seq (DNA-methylation, ATAC-Seq etc)
 
 . . . 
 
-- Built to enable the GRAVI snakemake workflow:
-    + Gene Regulatory Analysis using Variable Inputs
+- All processes designed for existing object classes:
+    + `SummarizedExperiment`, `GRanges`, `GRangesList`, `List` 
+    
+. . .    
+
+- Seamless interaction with the `tidyverse` [@tidyverse2019] + `plyranges` [@plyranges]
+    + Not intended to be a strict "tidy" implementation of ChIP-Seq
+
+
+## Why `extraChIPs`?
+
+- Simplify common processes:
+    + Detection of Differential Signal (Fixed-Width + Sliding Windows)
+    + Maintaining `mcols` throughout an analysis
+    + Easier comparison *across multiple targets or treatments*
+    + Mapping to genes & pre-defined genomic regions/features
+    + Enable common visualisations
+- Hopefully haven't re-invented too many wheels
+- Applicable well beyond ChIP-Seq (DNA-methylation, ATAC-Seq etc)
 
 # Core Infrastructure {background-color="#3c3c44" background-image=https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/extraChIPs/extraChIPs.png background-size="35%" background-opacity="0.2"}
 
@@ -82,31 +106,60 @@ library(plyranges)
 
 - Existing functions `reduce`, `setdiff`, `intersect`, `union`
     + All will drop information in the `mcols` element
-- `reduceMC`, `setdiffMC`, `intersectMC` and `unionMC`
-    + Will retain all information in `mcols` element
-- Also introduces `chopMC` and `distinctMC`
-    + Based on `tidyverse` functions [@tidyverse2019]
-- Regularly used internally
 
-## reduceMC
+. . .    
+    
+- `reduceMC`, `setdiffMC`, `intersectMC` and `unionMC`
+    + Retain all information in `mcols` element
+    + Returned as `CompressedList` or atomic vectors
+    + Heavily used internally
+    
+. . .    
+    
+- Addition of `chopMC` and `distinctMC`
+    + Based on `tidyverse` functions 
+    + Helpful after multiple sequential joins
+    
+
+## `reduce` Vs. `reduceMC`
 
 ```{r reduce}
-#| echo: 3
+#| echo: 6
 x <- GRanges(c("chr1:1-10", "chr1:6-12"))
 x$id <- c("range1", "range2")
+x$gene <- "gene1"
+sq <- Seqinfo("chr1", 12, FALSE, "example")
+seqinfo(x) <- sq
 x
 ```
 
 . . . 
 
+`reduce` will simply combine overlapping ranges
+
 ```{r, echo = TRUE}
 reduce(x)
 ```
 
-. . .
+## `reduce` Vs. `reduceMC`
+
+```{r}
+x
+```
+
+
+`reduceMC` will also combine values in the `mcols` element
 
 ```{r, echo =TRUE}
 reduceMC(x)
+```
+
+. . .
+
+`mcols` are simplified by default (`simplify = TRUE`)
+
+```{r, echo =TRUE}
+reduceMC(x, simplify = FALSE)
 ```
 
 ## `tibble` Coercion
@@ -132,15 +185,22 @@ tbl
 colToRanges(tbl, var = "range")
 ```
 
+. . .
 
-- Seqinfo objects can also be passed via this function
+- Seqinfo objects can also be included
+
+```{r}
+colToRanges(tbl, var = "range", seqinfo = seqinfo(x))
+```
+
+
 
 ## `colToRanges()`
 
 - `colToRanges` also enables `GRanges` objects in the `mcols` element to become the 'backbone' ranges
 
 ```{r}
-x$centre <- GRanges(paste0("chr1:", c(5, 10)))
+x$centre <- GRanges(paste0("chr1:", c(5, 10)), seqinfo = seqinfo(x))
 x
 colToRanges(x, var = "centre")
 ```
@@ -163,9 +223,7 @@ seqinfo(gtf) <- sq
 
 ```r
 defineRegions(
-  genes,
-  transcripts,
-  exons,
+  genes, transcripts, exons,
   promoter = c(2500, 500),
   upstream = 5000,
   intron = TRUE,
@@ -176,11 +234,33 @@ defineRegions(
 )
 ```
 
-- Genomic Regions can be defined *hierachically* using a supplied gtf
-- 1) Promoters; 2) Upstream Promoters; 3) Exons; 4) Introns; 5) Proximal Intergenic; and 6) Distal Intergenic
-    + Exons/Introns can be collapsed into 'Gene Body' (`intron = FALSE`)
-    + Intergenic Regions can also be merged  (`proximal = 0`)
-- All distances are able to be set manually
+- Unique Genomic Regions can be defined *hierachically* using a supplied gtf
+    1. Promoters
+    2. Upstream Promoters
+    3. Exons
+    4. Introns
+    5. Proximal Intergenic
+    6. Distal Intergenic
+    
+
+## `defineRegions()`
+
+```r
+defineRegions(
+  genes, transcripts, exons,
+  promoter = c(2500, 500),
+  upstream = 5000,
+  intron = TRUE,
+  proximal = 10000,
+  simplify = FALSE,
+  cols = c("gene_id", "gene_name", "transcript_id", "transcript_name"),
+  ...
+)
+```
+    
+- All distances are able to be set manually 
+- Exons/Introns can be collapsed into 'Gene Body' (`intron = FALSE`)
+- Intergenic Regions can also be merged  (`proximal = 0`)
 
 
 ## `defineRegions()`
@@ -189,7 +269,8 @@ defineRegions(
 regions <- defineRegions(
   genes = gtf$gene, transcripts = gtf$transcript, exons = gtf$exon
 )
-regions
+names(regions)
+regions$promoter
 ```
 
 
@@ -204,6 +285,7 @@ er_samples <- tibble(
   treatment = factor(rep(treat_levels, each = 3), levels = treat_levels)
 )
 treat_colours <- setNames(c("steelblue", "red3"), treat_levels)
+sample_colours <- treat_colours[er_samples$treatment]
 ```
 
 ## Importing Peaks
@@ -240,22 +322,34 @@ peaks
 ## `plotOverlaps()`
 
 ```{r plot-overlaps}
-plotOverlaps(peaks, set_col = treat_colours)
+plotOverlaps(peaks, set_col = sample_colours)
 ```
 
-- Calls `ComplexUpset::upset()` if n >= 3 (otherwise `VennDiagram::draw.pairwise.venn()`)
+- Calls `ComplexUpset::upset()` if n $\geq$ 3 
+    + (`VennDiagram::draw.pairwise.venn()` if n  $\leq 2$)
 - All arguments can be passed using `...`
+
+## `plotOverlaps()` {visibility="hidden"}
+
+```{r plot-overlapswith-boxplot}
+plotOverlaps(
+  peaks, set_col = sample_colours, var = "score", f = "min", .sort_sets = FALSE
+)
+```
+
+- Summaries can be added as boxplots
+    + E.g. the minimum score across all samples
 
 ## Consensus Peaks
 
 - By default, the union of ranges will be returned
-- Any, or all columns can also be returned
+- Any/all columns can be returned
 
 ```{r}
 makeConsensus(peaks[1:3], var = "centre", p = 2/3)
 ```
 
-## Consensus Peaks
+## Consensus Peaks {visibility="hidden"}
 
 - Can also return ranges based on coverage between samples
 - Narrower, but consistently 'covered' ranges
@@ -264,64 +358,131 @@ makeConsensus(peaks[1:3], var = "centre", p = 2/3)
 makeConsensus(peaks[1:3], var = "centre", method = "coverage", p = 2/3)
 ```
 
-## Mapping Peaks
 
+## Consensus Peaks
 
-```{r union-peaks, echo = FALSE}
+To find peaks identified in 2/3 samples in either condition:
+
+```{r union-peaks}
+#| code-line-numbers: '2-3|7-8'
 treatment_peaks <- list(
     E2 = makeConsensus(peaks[1:3], var = "centre", p = 2/3),
     E2DHT = makeConsensus(peaks[4:6], var = "centre", p = 2/3)
 ) %>% 
-    lapply(granges) %>% 
+    lapply(select, centre) %>% 
     GRangesList()
-union_peaks <- makeConsensus(treatment_peaks)
-```
-
-```{r}
+union_peaks <- makeConsensus(treatment_peaks, var = "centre")
+union_peaks$centre <- round(vapply(union_peaks$centre, mean, numeric(1)), 0)
+union_peaks <- select(union_peaks, centre)
 union_peaks
 ```
 
+## Mapping Peaks
 
 After finding consensus peaks for both treatments in this dataset (E2, E2DHT):
 
 1. Map to regions using `bestOverlap()`
+    + Calls `propOverlap()` internally
 2. Map to genes using `mapByFeature()`
 
 ## `bestOverlap()`
 
 ```{r}
+#| code-line-numbers: '2'
+region_levels <- vapply(regions, function(x) x$region[1], character(1))
 union_peaks$region <- bestOverlap(union_peaks, unlist(regions), var = "region")
+union_peaks$region <- factor(union_peaks$region, levels = region_levels)
 union_peaks
 ```
 
+Now we have peaks annotated to regions $\implies$ `plotPie()`
+
+
+## `propOverlaps()` {visibility="hidden"}
+
+Returns the proportion of `x` which overlaps `y`
+
+```{r}
+regions %>% 
+  lapply(function(x) propOverlap(union_peaks, x)) %>% 
+  as_tibble() %>% 
+  mutate(range = as.character(union_peaks)) %>% 
+  colToRanges("range", seqinfo = seqinfo(union_peaks))
+```
+
+
+
+## `plotPie()`
+
+```{r plot-pie}
+plotPie(union_peaks, fill = "region") + scale_fill_viridis_d(direction = -1)
+```
+
+::: {.notes}
+Now that we have our peaks mapped to genomic regions, we can use `plotPie()`
+:::
+
+## `plotPie()` {.scrollable}
+
+```{r plot-pie-labels, fig.height=6, fig.width=8}
+#| code-line-numbers: '3|4'
+#| output-location: slide
+plotPie(
+  union_peaks, fill = "region", 
+  min_p = 0.05, total_size = 4.5, cat_alpha = 0.7, cat_adj = 0.05,
+  cat_glue = "{str_wrap(.data[[fill]], 15)}\nn = {comma(n, 1)}\n({percent(p, 0.1)})"
+) +  
+  scale_fill_viridis_d(direction = -1)
+```
+
+- Can hide labels for infrequent overlaps (`min_p = 0.05`) and customise:
+    + Adjust size of totals
+    + Transparency + postion of category labels etc
+
+. . .
+
+- Label text is highly customisable
+    + Uses `glue` syntax $\implies$ can include function calls
+    + Totals available as `n`, proportions as `p`, categories as `.data[[fill]]`
+
+::: {.notes}
+- Can also scale segments by range width
+- Also able to take data.frame objects as input, with scaling by any column
+:::
 
 ## `mapByFeature()`
 
-Maps to genes using ranges separately defined as *promoters*, *enhancers* or *long-range interactions*
-
 ```r
 mapByFeature(
-  gr,
-  genes,
-  prom,
-  enh,
-  gi,
-  cols = c("gene_id", "gene_name", "symbol"),
-  gr2prom = 0,
-  gr2enh = 0,
-  gr2gi = 0,
-  gr2gene = 1e+05,
-  prom2gene = 0,
-  enh2gene = 1e+05,
-  gi2gene = 0,
-  ...
+  gr,    # Ranges to be mapped
+  genes, # Gene-annotations
+  prom,  # Ranges annotated as promoters
+  enh,   # Ranges annotated as enhancers
+  gi,    # GInteractions object
+  cols = c("gene_id", "gene_name", "symbol"), # Columns to return (if present)
+  gr2prom = 0, gr2enh = 0, gr2gi = 0, # Distances between ranges & features
+  gr2gene = 1e+05, prom2gene = 0, enh2gene = 1e+05, gi2gene = 0, ...
 )
 ```
+
+Ranges overlapping:
+
+1. a promoter $\implies$ assigned to that gene
+2. an enhancer $\implies$ all genes within a specified distance
+3. a long-range interaction $\implies$ all genes connected by the interaction
+4. none-of the above $\implies$ 
+    a. all overlapping genes or
+    b. the nearest gene within a specified distance
+    
+::: {.notes}
+Map ranges to genes using additional annotated ranges (i.e. features)
+:::
 
 ## `mapByFeature()`
 
 ```{r}
-mapByFeature(union_peaks, genes = gtf$gene, prom = regions$promoter)
+union_peaks <- mapByFeature(union_peaks, genes = gtf$gene, prom = regions$promoter)
+union_peaks[1:5]
 ```
 
 
@@ -329,25 +490,199 @@ mapByFeature(union_peaks, genes = gtf$gene, prom = regions$promoter)
 
 ## Two approaches to Differential Signal
 
+::: {.notes}
+- `dualFilter()` wraps both `filterWindowsProportion()` and `filterWindowsControl()`
+- If no input sample, only filters based on overall signal
+:::
+
+::: {.panel-tabset}
+
 ### Fixed-Width Analaysis
 
-- Highly Comparable to `DiffBind`
-- Define a set of fixed-width ranges:
-    - Use centres from `importPeaks()` after running `makeConsensus()`
-- Count Reads using `csaw::regionCounts()` $\implies$ `RangedSummarizedEperiment`
+Highly Comparable to `DiffBind`
 
-## Two approaches to Differential Signal
+1. Define a set of fixed-width ranges:
+    - Centres from `importPeaks()` $\implies$ `makeConsensus()`
+2. Count Reads using `csaw::regionCounts()` + `BamFileList`
+    + Returns a `RangedSummarizedExperiment`
 
 ### Sliding Windows
 
-- Based on `csaw`
-- Final signal for merged ranges:
-    + `csaw` methods: `mergeByCol()`, `mergeBySig()`
-    + Return as merged ranges with an additional range as the *key-value range*
-- Merge using the Harmonic Mean p-values
-    + `mergeByHMP()`
-    + logFC and logCPM values are weighted averages based in sliding window p-values
-    + Key-value ranges can be 1) Lowest p-value or 2) All ranges below the HMP
+Extends `csaw` approaches
+
+1. Define windows 
+2. Count reads using `csaw::windowCounts()` + `BamFileList`
+    + Returns a `RangedSummarizedExperiment`
+3. Filter for windows containing signal: `dualFilter()`
+    + Uses a set of 'guide ranges' to set filtering thresholds
+    + Filters based on overall signal level and relative to input
+    + Adds a `logCPM` assay
+
+<!-- - Final signal for merged ranges: -->
+<!--     + `csaw` methods: `mergeByCol()`, `mergeBySig()` -->
+<!--     + Return as merged ranges with an additional range as the *key-value range* -->
+<!-- - Merge using the Harmonic Mean p-values -->
+<!--     + `mergeByHMP()` -->
+<!--     + logFC and logCPM values are weighted averages based in sliding window p-values -->
+<!--     + Key-value ranges can be 1) Lowest p-value or 2) All ranges below the HMP -->
+
+:::
+
+## Two approaches to Differential Signal
+
+- Multiple visualisation functions after counting reads
+- Differential Signal Analysis: `fitAssayDiff()` 
+
+. . .
+
+- Sliding window analysis $\implies$ merge overlapping windows
+    + `mergeByCol()`: Choose a window by values in one column
+    + `mergeBySig()`: Wraps `csaw` methods (`combineTests`, `getBestTest`, `minimalTests`)
+    + `mergeByHMP` uses harmonic-mean p [@Wilson2019-ln]
+    + All return the relevant underlying windows (`keyval_range`)
+
+## Fixed-Width Windows {.smaller}
+
+```{r count-fixed}
+#| code-line-numbers: '3-6|7-14|15-17|18-22|23-26|27'
+#| output-location: fragment
+library(Rsamtools)
+library(csaw)
+## Define the BamFileList
+er_bfl <- file.path("data", "ER", paste0(er_samples$accession, ".bam")) %>% 
+  BamFileList() %>% 
+  setNames(er_samples$accession)
+## Centre & resize the peaks
+centred_peaks <- union_peaks %>% 
+  mutate(
+    centre = paste0(seqnames, ":", centre),
+    union_peak = granges(.)
+  ) %>% 
+  colToRanges(var = "centre") %>% 
+  resize(width = 400, fix = "center") 
+## Count Reads
+er_se <- regionCounts(er_bfl, centred_peaks, ext = 200)
+seqinfo(er_se) <- sq
+## Add all sample annotations
+colData(er_se) <- colData(er_se) %>% 
+  as_tibble(rownames = "accession") %>% 
+  left_join(er_samples) %>% 
+  as("DataFrame")
+## Re-assign union peaks to core ranges after counting
+rowRanges(er_se) <- rowRanges(er_se) %>% 
+  colToRanges(var = "union_peak") %>% 
+  select(region, starts_with("gene"))
+colData(er_se)
+```
+
+## Visualising Counts
+
+::: {.panel-tabset}
+
+### `plotAssayDensities()`
+
+```{r plot-er-densities, fig.width=6}
+plotAssayDensities(er_se, trans = "log1p", colour = "treatment") +
+  scale_colour_manual(values = treat_colours)
+```
+
+
+### `plotAssayPCA()`
+
+
+```{r plot-er-pca, fig.width=6}
+plotAssayPCA(er_se, trans = "log1p", colour = "treatment", label = "accession") +
+  scale_colour_manual(values = treat_colours)
+```
+
+
+:::
+
+## RLE Plots
+
+::: {.panel-tabset}
+
+### RLE By Sample
+
+```{r er-rle-by-sample, fig.width=6}
+plotAssayRle(er_se, trans = "log1p", fill = "treatment") +
+  scale_fill_manual(values = treat_colours)
+```
+
+
+### RLE By Treatment
+
+```{r er-rle-by-treatment, fig.width=6}
+plotAssayRle(er_se, trans = "log1p", fill = "treatment", by_x = "treatment") +
+  scale_fill_manual(values = treat_colours)
+```
+
+:::
+
+::: {.notes}
+Being able to show RLE by treatment group is incredibly helpful if reads are different between groups.
+Such as may be the case where treatment stimulates cytoplasmic to nuclear translocation
+
+Median values can also be calculated within any other columns such as passage, treatment etc
+:::
+
+## Sliding Windows {.smaller}
+
+
+```{r count-sliding}
+#| code-line-numbers: '3-9|10-16|17-20|21-32'
+## Define black & grey-lists
+bg_list <- file.path("data", "annotations", c("chr10_blacklist.bed", "chr10_greylist.bed")) %>% 
+  lapply(import.bed, seqinfo = sq) %>% 
+  lapply(granges) %>% 
+  GRangesList() %>% 
+  unlist() %>% 
+  sort()
+## Define the sample annotation data.frame
+h3k_samples <- tibble(
+  accession = paste0("SRR83151", seq(86, 91)),
+  target = "H3K27ac",
+  treatment = c(factor(rep(treat_levels, each = 3), levels = treat_levels))
+) %>% 
+  bind_rows(tibble(accession = "SRR8315192", target = "Input"))
+## Define the BamFile List
+h3k_bfl <- file.path("data", "H3K27ac", paste0(h3k_samples$accession, ".bam")) %>% 
+  BamFileList() %>% 
+  setNames(h3k_samples$accession)
+## Count reads
+rp <- readParam(pe = "none", restrict = "chr10", discard = bg_list)
+win_size <- 150
+win_step <- 50
+wincounts <- windowCounts(
+  bam.files = h3k_bfl,
+  spacing = win_step, width = win_size, ext = 200,
+  filter = length(h3k_bfl),
+  param = rp
+)
+seqlevels(wincounts) <- seqlevels(sq)
+seqinfo(wincounts) <- sq
+```
+
+## Sliding Windows
+
+```{r}
+#| code-line-numbers: '1-3|4-9|10-14'
+## Load in the pre-defined ranges
+guide_ranges <- file.path("data", "H3K27ac", "H3K27ac_chr10.bed") %>% 
+  import.bed(seqinfo = sq)
+## Filter using the guide ranges
+filtcounts <- dualFilter(
+  x = wincounts[,dplyr::filter(h3k_samples, target == "H3K27ac")$accession],
+  bg  =  wincounts[,dplyr::filter(h3k_samples, target == "Input")$accession],
+  ref = guide_ranges, q = 0.6
+)
+## Update the colData
+colData(filtcounts) <- colData(filtcounts) %>% 
+  as_tibble(rownames = "accession") %>% 
+  left_join(h3k_samples) %>% 
+  as("DataFrame")
+```
+
 
 ## `fitAssayDiff()`
 
@@ -371,33 +706,37 @@ fitAssayDiff(
 - Calls `edgeR::glmQLFit` methods [@edgeRQLF2016]
 - Also calls `limma-trend` if fitting logCPM values [@Law2014-xq]
 - Can apply range-based H~0~ [@McCarthy2009-qf]
-- Optionally normalise *within treatment groups* (`groups = "treat"`)
+- Optionally normalise *within treatment groups* (e.g. `groups = "treat"`)
 - Library sizes can be set as colSums (`lib.size = NULL`)
 
-## `mergeByHMP()`
+## Fixed-Width Windows
 
-- Uses the *asmyptotically exact* harmonic-mean p [@Wilson2019-ln]
-- Controls the `FDR` similarly to `Simes` method (`csaw`)
-- Also has strict `FWER` control (`p_adj_method = "fwer"`)
-
-```r
-mergeByHMP(
-  x,
-  df = NULL,
-  w = NULL,
-  logfc = "logFC",
-  pval = "P",
-  cpm = "logCPM",
-  inc_cols = NULL,
-  p_adj_method = "fdr",
-  merge_within = 1L,
-  ignore_strand = TRUE,
-  min_win = 1,
-  keyval = c("min", "merged"),
-  ...
-)
+```{r}
+#| code-line-numbers: '1|2-4|5|6'
+#| output-location: fragment
+X <- model.matrix(~treatment, data = colData(er_se))
+er_results <- fitAssayDiff(
+  er_se, design = X, norm = "TMM", asRanges = TRUE, fc = 1.2
+) %>% 
+  addDiffStatus()
+arrange(er_results, PValue)
 ```
+
+
+## Sliding Windows
+
+```{r}
+#| code-line-numbers: '1|2|3-4|5'
+#| output-location: fragment
+X <- model.matrix(~treatment, data = colData(filtcounts))
+h3k_all <- fitAssayDiff(filtcounts, norm = "TMM", design = X, asRanges = TRUE)
+h3k_results <- mergeByHMP(h3k_all, min_win = 2, merge_within = win_size + 1) %>% 
+  addDiffStatus()
+h3k_results
+```
+
+
 
 # Comparing Results {background-color="#3c3c44"}
 
-
+# References
