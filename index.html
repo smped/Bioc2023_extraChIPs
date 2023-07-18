@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2023-07-14" />
+<meta name="date" content="2023-07-19" />
 
 <title>Bioc2023: extraChIPs Package Demonstration</title>
 
@@ -201,7 +201,7 @@ function toggle_visibility(id1) {
 <p class="author-name">Stevie Pederson<span class="affil-mark">1,2,3*</span></p>
 <p class="author-affiliation"><span class="affil-mark">1</span>Black Ochre Data Laboratories, Telethon Kids Institute, Adelaide, Australia<br><span class="affil-mark">2</span>Dame Roma Mitchell Cancer Researc Laboratories, University of Adelaide<br><span class="affil-mark">3</span>John Curtin School of Medical Research, Australian National University</p>
 <p class="author-email"><span class="affil-mark">*</span><a href="mailto:stephen.pederson.au@gmail.com">stephen.pederson.au@gmail.com</a></p>
-<h4 class="date">14 July 2023</h4>
+<h4 class="date">19 July 2023</h4>
 <h4 class="abstract">Abstract</h4>
 <p>extraChIPs: Package Demo</p>
 <h4 class="package">Package</h4>
@@ -271,7 +271,7 @@ The focus is on:</p>
 Some functions may be analogous to those in existing packages, but the aim is to be simple and intuitive to use, whilst simplifying high-performance analyses.
 Previous work by the authors of DiffBind <span class="citation">(<a href="#ref-DiffBind2012">Ross-Innes et al. 2012</a>)</span> and csaw <span class="citation">(<a href="#ref-csaw2016">Lun and Smyth 2016</a>)</span> has been instrumental in the package design, along with the tidyverse <span class="citation">(<a href="#ref-tidyverse2019">Wickham et al. 2019</a>)</span> and edgeR <span class="citation">(<a href="#ref-edgeRQLF2016">Chen, Lun, and Smyth 2016</a>)</span>.
 The intention of the package is to integrate easily with these packages, wrap multiple functions where appropriate, and provide new tools for both visualisation and working with results.</p>
-<p>The talk accompanying this material can be found <a href="Bioc2023_presentation.html">here</a></p>
+<p><strong>The talk accompanying this material can be found</strong> <a href="Bioc2023_presentation.html">here</a></p>
 </div>
 <div id="data-and-workshop-setup" class="section level2" number="1.2">
 <h2><span class="header-section-number">1.2</span> Data and Workshop Setup</h2>
@@ -340,12 +340,13 @@ These are used internally by many functions within the package, but also have ma
 <p>Define a simple set of ranges, with ids in the <code>mcols</code></p>
 <pre class="r"><code>x &lt;- GRanges(c(&quot;chr1:1-10&quot;, &quot;chr1:6-12&quot;))
 x$id &lt;- c(&quot;range1&quot;, &quot;range2&quot;)
+x$gene &lt;- &quot;gene1&quot;
 x</code></pre>
-<pre><code>## GRanges object with 2 ranges and 1 metadata column:
-##       seqnames    ranges strand |          id
-##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
-##   [1]     chr1      1-10      * |      range1
-##   [2]     chr1      6-12      * |      range2
+<pre><code>## GRanges object with 2 ranges and 2 metadata columns:
+##       seqnames    ranges strand |          id        gene
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+##   [1]     chr1      1-10      * |      range1       gene1
+##   [2]     chr1      6-12      * |      range2       gene1
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
 <p>When calling <code>reduce()</code> we lose all <code>mcols</code> information.</p>
@@ -358,10 +359,10 @@ x</code></pre>
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
 <p>These are retained when calling <code>reduceMC</code></p>
 <pre class="r"><code>reduceMC(x)</code></pre>
-<pre><code>## GRanges object with 1 range and 1 metadata column:
-##       seqnames    ranges strand |              id
-##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;CharacterList&gt;
-##   [1]     chr1      1-12      * |   range1,range2
+<pre><code>## GRanges object with 1 range and 2 metadata columns:
+##       seqnames    ranges strand |              id        gene
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;CharacterList&gt; &lt;character&gt;
+##   [1]     chr1      1-12      * |   range1,range2       gene1
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
 <p>All other functions behave in a similar manner</p>
@@ -374,10 +375,10 @@ intersect(x, y)</code></pre>
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
 <pre class="r"><code>intersectMC(x, y)</code></pre>
-<pre><code>## GRanges object with 1 range and 1 metadata column:
-##       seqnames    ranges strand |          id
-##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
-##   [1]     chr1     11-12      * |      range2
+<pre><code>## GRanges object with 1 range and 2 metadata columns:
+##       seqnames    ranges strand |          id        gene
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+##   [1]     chr1     11-12      * |      range2       gene1
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
 <pre class="r"><code>setdiff(x, y)</code></pre>
@@ -388,10 +389,10 @@ intersect(x, y)</code></pre>
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
 <pre class="r"><code>setdiffMC(x, y)</code></pre>
-<pre><code>## GRanges object with 1 range and 1 metadata column:
-##       seqnames    ranges strand |              id
-##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;CharacterList&gt;
-##   [1]     chr1      1-10      * |   range1,range2
+<pre><code>## GRanges object with 1 range and 2 metadata columns:
+##       seqnames    ranges strand |              id        gene
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;CharacterList&gt; &lt;character&gt;
+##   [1]     chr1      1-10      * |   range1,range2       gene1
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
 <pre class="r"><code>union(x, y)</code></pre>
@@ -402,10 +403,10 @@ intersect(x, y)</code></pre>
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
 <pre class="r"><code>unionMC(x, y)</code></pre>
-<pre><code>## GRanges object with 1 range and 1 metadata column:
-##       seqnames    ranges strand |              id
-##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;CharacterList&gt;
-##   [1]     chr1      1-15      * |   range1,range2
+<pre><code>## GRanges object with 1 range and 2 metadata columns:
+##       seqnames    ranges strand |              id        gene
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;CharacterList&gt; &lt;character&gt;
+##   [1]     chr1      1-15      * |   range1,range2       gene1
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
 </div>
@@ -415,26 +416,26 @@ intersect(x, y)</code></pre>
 When coercing to a <code>tibble</code>, the <code>GRanges</code> element is coerced to a character vector.</p>
 <pre class="r"><code>tbl &lt;- as_tibble(x)
 tbl</code></pre>
-<pre><code>## # A tibble: 2 × 2
-##   range     id    
-##   &lt;chr&gt;     &lt;chr&gt; 
-## 1 chr1:1-10 range1
-## 2 chr1:6-12 range2</code></pre>
+<pre><code>## # A tibble: 2 × 3
+##   range     id     gene 
+##   &lt;chr&gt;     &lt;chr&gt;  &lt;chr&gt;
+## 1 chr1:1-10 range1 gene1
+## 2 chr1:6-12 range2 gene1</code></pre>
 <p>The tibble can be returned to the more conventional set of columns by setting <code>rangeAsChar = FALSE</code></p>
 <pre class="r"><code>as_tibble(x, rangeAsChar = FALSE)</code></pre>
-<pre><code>## # A tibble: 2 × 6
-##   seqnames start   end width strand id    
-##   &lt;fct&gt;    &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;fct&gt;  &lt;chr&gt; 
-## 1 chr1         1    10    10 *      range1
-## 2 chr1         6    12     7 *      range2</code></pre>
+<pre><code>## # A tibble: 2 × 7
+##   seqnames start   end width strand id     gene 
+##   &lt;fct&gt;    &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;fct&gt;  &lt;chr&gt;  &lt;chr&gt;
+## 1 chr1         1    10    10 *      range1 gene1
+## 2 chr1         6    12     7 *      range2 gene1</code></pre>
 <p>Additional methods have been implemented for easy coercion of <code>DataFrame</code>, <code>GInteractions</code>, <code>Seqinfo</code>, <code>SummarzedExperiment</code> and <code>TopTags</code> objects</p>
 <p>Coercion is implemented from <code>tibble</code> to <code>GRanges</code> using <code>colToRanges()</code></p>
 <pre class="r"><code>colToRanges(tbl, var = &quot;range&quot;)</code></pre>
-<pre><code>## GRanges object with 2 ranges and 1 metadata column:
-##       seqnames    ranges strand |          id
-##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
-##   [1]     chr1      1-10      * |      range1
-##   [2]     chr1      6-12      * |      range2
+<pre><code>## GRanges object with 2 ranges and 2 metadata columns:
+##       seqnames    ranges strand |          id        gene
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;character&gt;
+##   [1]     chr1      1-10      * |      range1       gene1
+##   [2]     chr1      6-12      * |      range2       gene1
 ##   -------
 ##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
 <p>Whilst the <code>seqinfo</code> is clearly lost in the reverse coercion, <code>colToRanges()</code> also allows for moving a <code>GRanges</code> object within the <code>mcols</code> element to be set as a new set of ranges.
@@ -978,7 +979,7 @@ arrange(er_results, PValue)</code></pre>
 ##   [187]    chr10 82725993-82726916      * |    Intergenic (&gt;10kb)   
 ##   [188]    chr10 64605136-64605347      * |    Intron               
 ##                                            gene_id
-##                                             &lt;list&gt;
+##                                    &lt;CharacterList&gt;
 ##     [1]                       ENSG00000108179.14_6
 ##     [2]                      ENSG00000151208.17_11
 ##     [3]   ENSG00000225913.2_9,ENSG00000196566.2_10
@@ -991,7 +992,7 @@ arrange(er_results, PValue)</code></pre>
 ##   [187]                        ENSG00000227209.1_5
 ##   [188]                        ENSG00000289487.1_1
 ##                               gene_name       logFC    logCPM      PValue
-##                                  &lt;list&gt;   &lt;numeric&gt; &lt;numeric&gt;   &lt;numeric&gt;
+##                         &lt;CharacterList&gt;   &lt;numeric&gt; &lt;numeric&gt;   &lt;numeric&gt;
 ##     [1]                            PPIF    1.887377   8.02941 6.00421e-11
 ##     [2]                            DLG5    0.966791   8.23125 4.13714e-06
 ##     [3] ENSG00000225913,ENSG00000196566    1.712374   6.20441 1.00877e-05

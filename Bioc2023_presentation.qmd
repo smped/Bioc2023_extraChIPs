@@ -1,6 +1,6 @@
 ---
-title: "Bioc2023"
-subtitle: "extraChIPs: Package Demonstration"
+title: "extraChIPs"
+subtitle: "Bioc 2023 Package Demonstration"
 author: "Stevie Pederson (They/Them)"
 date: "2023-08-02"
 date-format: long
@@ -687,7 +687,7 @@ union_peaks[1:5]
 - By this point, we have peaks mapped to regulatory regions and most likely target genes
 :::
 
-# Differential Signal Analysis {background-color="#3c3c44"}
+# Differential Signal Analysis {background-color="#3c3c44" background-image=https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/extraChIPs/extraChIPs.png background-size="35%" background-opacity="0.2"}
 
 ## Two approaches to Differential Signal Analysis
 
@@ -1031,7 +1031,7 @@ arrange(h3k_results, hmp)[1:5]
 ```
 
 
-# Comparing Results {background-color="#3c3c44"}
+# Comparing Results {background-color="#3c3c44" background-image=https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/extraChIPs/extraChIPs.png background-size="35%" background-opacity="0.2"}
 
 ## Comparing Two Targets
 
