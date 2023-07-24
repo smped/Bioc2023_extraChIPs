@@ -44,17 +44,17 @@ theme_set(theme_bw())
 
 ## Who Am I?
 
-- Post-doctoral Bioinformatician at Black Ochre Data Laboratories
+- Post-doctoral Bioinformatician at Black Ochre Data Labs
     + Telethon Kids Institute, Adelaide, Australia
     + Traditional lands of the Kaurna nation
 - Improving health outcomes for Indigenous Australians
-- 1400 study participants
     + Type 2 Diabetes, Cardiovascular Disease, Chronic Kidney Disease
+- 1400 study participants
     + Genomics, Epigenomics, Transcriptomics, Proteomics, Lipidomics etc
 
 ## Who Am I?
 
-- Bioinformatics Hub at University of Adelaide (2014-2020)
+<!-- - Bioinformatics Hub at University of Adelaide (2014-2020) -->
 - Dame Roma Mitchell Cancer Research Laboratories (UofA, 2020-2022)
     + Integrating multiple ChIP targets across multiple cell lines
     + Regulatory dynamics of AR activation with DHT (or SARMs)
@@ -82,7 +82,7 @@ theme_set(theme_bw())
 
 ::: {style="font-size: 90%;"}
     
-- Filled several gaps between `DiffBind` [@DiffBind2012] and `csaw` [@csaw2016]
+- Filled gaps between `DiffBind` [@DiffBind2012] and `csaw` [@csaw2016]
 
 :::
 
@@ -90,7 +90,7 @@ theme_set(theme_bw())
 
 ::: {style="font-size: 90%;"}
 
-- All processes designed for existing object classes:
+- Use existing object classes:
     + `SummarizedExperiment`, `GRanges`, `GRangesList`, `List` 
     + `BigWigFileList`, `BamFileList` etc
     
@@ -100,7 +100,7 @@ theme_set(theme_bw())
 
 ::: {style="font-size: 90%;"}
 
-- Seamless integration with the `tidyverse` [@tidyverse2019] + `plyranges` [@plyranges]
+- Integration with the `tidyverse` [@tidyverse2019] + `plyranges` [@plyranges]
 
 :::
 
@@ -113,10 +113,10 @@ theme_set(theme_bw())
 ## Why `extraChIPs`?
 
 - Simplify common processes:
-    + Detection of Differential Signal (Fixed-Width or Sliding Windows)
+    + Flexible detection of Differential Signal (Fixed-Width or Sliding Windows)
     + Maintaining `mcols` throughout an analysis
     + Easier comparison *across multiple targets or treatments*
-    + Mapping to genes & pre-defined genomic regions/features
+    <!-- + Mapping to genes & pre-defined genomic regions/features -->
     + Enable common visualisations
     
 . . .    
@@ -205,11 +205,11 @@ Functions higlighted with an asterisk are only in `devel`
     + Returned as `CompressedList` or atomic vectors
     + Heavily used internally
     
-. . .    
-    
-- Addition of `chopMC` and `distinctMC`
-    + Based on `tidyverse` functions 
-    + Helpful after multiple sequential joins
+<!-- . . .     -->
+
+<!-- - Addition of `chopMC` and `distinctMC` -->
+<!--     + Based on `tidyverse` functions  -->
+<!--     + Helpful after multiple sequential joins -->
     
 
 ## `reduce` Vs. `reduceMC`
@@ -293,11 +293,14 @@ colToRanges(tbl, var = "range", seqinfo = seqinfo(x))
 - `colToRanges` can also move `GRanges` objects in `mcols` to the 'backbone' ranges
 
 ```{r}
+#| code-line-numbers: '1'
 x$centre <- GRanges(paste0("chr1:", c(5, 10)), seqinfo = seqinfo(x))
 x
 ```
 
 . . .
+
+<br>
 
 ```{r}
 colToRanges(x, var = "centre")
@@ -307,16 +310,17 @@ colToRanges(x, var = "centre")
 
 # Working With Peaks  {background-color="#3c3c44" background-image=https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/extraChIPs/extraChIPs.png background-size="35%" background-opacity="0.2"}
 
-## Demonstration Data ^[Taken from SRA BioProject PRJNA509779 and subset to a region of chr10]
+## Demonstration Data ^[Taken from SRA BioProject PRJNA509779 [@Hickey2021-mz] and subset to a region of chr10]
 
 ```{r samples}
-#| output-location: column-fragment
-#| code-line-numbers: '1-11|12-19|20-22'
+#| output-location: column
+#| code-line-numbers: '1-12,21-23'
 ## Define Samples
 treat_levels <- c("E2", "E2DHT")
+targets <- c("ER", "H3K27ac")
 samples <- tibble(
   accession = paste0("SRR83151", seq(80, 91)),
-  target = rep(c("ER", "H3K27ac"), each = 6),
+  target = rep(targets, each = 6),
   treatment = treat_levels %>% 
     rep(each = 3) %>% 
     rep_len(12) %>% 
@@ -358,11 +362,11 @@ twee <- function(path = getwd(), level = Inf) {
   
   jfun <- function(x) {
     n <- length(x)
-    if(n > 1)
+    if (n > 1)
       x[n - 1] <- "|__"
-    if(n > 2)
+    if (n > 2)
       x[1:(n - 2)] <- "   "
-    x <- if(n == 1) c("-- ", x) else c("   ", x)
+    x <- if (n == 1) c("-- ", x) else c("   ", x)
     x
   }
   fad_subbed_out <- lapply(fad_split_up, jfun)
@@ -379,17 +383,21 @@ cat(twee("data"), sep = "\n")
 ## Additional Objects
 
 ```{r setup-extra}
-#| code-line-numbers: '1-3|4-9|10-1'
+#| code-line-numbers: '1-4|6-13|14-20'
+## A consistent Seqinfo object
 sq <- Seqinfo(
   seqnames = "chr10", seqlengths = 135534747, isCircular = FALSE,  genome = "hg19"
 )
+
+## Gene Annotations as a GTF, split by feature type
 gtf <- file.path(
   "data", "annotations", "gencode.v43lift37.chr10.annotation.gtf.gz"
 ) %>% 
   import.gff() %>% 
   split(.$type)
 seqinfo(gtf) <- sq
-## Define black & grey-lists
+
+## Black & grey-lists (From ENCODE & Input Sample)
 bg_list <- file.path("data", "annotations", c("chr10_blacklist.bed", "chr10_greylist.bed")) %>% 
   lapply(import.bed, seqinfo = sq) %>% 
   lapply(granges) %>% 
@@ -397,6 +405,22 @@ bg_list <- file.path("data", "annotations", c("chr10_blacklist.bed", "chr10_grey
   unlist() %>% 
   sort()
 ```
+
+## Working With Peaks
+
+Key Steps:
+
+1. Load peaks identified in individual samples (e.g. `macs2 callpeak`)
+
+. . .
+
+2. Find overlapping regions within x% of replicates $\implies$ *consensus peaks*
+    + Can be formed within treatment groups
+    + Merged across treatment groups
+    
+. . .
+    
+Peak callers often produce narrowPeak/broadPeak files
 
 
 ## Importing Peaks
@@ -417,9 +441,9 @@ importPeaks(
 )
 ```
 
-- Import broad/narrowPeak files from `macs2 callpeak` or another peak-caller
-- Returns a `GRangesList`
-- Only chromosomes/scaffolds within the `seqinfo` object will be returned
+- Import broad/narrowPeak files $\implies$ `GRangesList`
+- **Only chromosomes/scaffolds within the `seqinfo` object will be returned**
+- Blacklisted regions can be omitted during parsing
 - Peak Centres can be automatically added for `narrowPeak` files
 
 ## Importing Peaks
@@ -440,8 +464,10 @@ plotOverlaps(peaks, set_col = sample_colours)
 ```
 
 - Calls `ComplexUpset::upset()` if n $\geq$ 3 
-    + `...` is passed to `upset()`
 
+::: {.notes}
+- `...` is passed to `upset()`
+:::
 
 ## `plotOverlaps()` {visibility="hidden"}
 
@@ -461,9 +487,41 @@ plotOverlaps(
 makeConsensus(peaks[1:3], var = "centre", p = 2/3)
 ```
 
-- By default, the *union* of overlapping ranges will be returned
-- Can also return only ranges *covered* by `p` samples
-- Any/all mcols can be returned
+
+## Consensus Peaks
+
+```{r olap-ranges, echo=FALSE}
+tibble(
+  y = as.factor(paste("Rep", 1:3)),
+  start = c(500, 600, 550),
+  end = c(900, 950, 820),
+  w = end - start,
+  xmin = start - 0.5*w,
+  xmax = start + 0.5 * w
+) %>% 
+  ggplot(aes(x = start, y = y, width = w)) +
+  geom_tile(
+    fill = rgb(0.2, 0.2, 0.6), colour = "black", linewidth = 1.2, height = 0.8
+  ) +
+  geom_vline(
+    xintercept = c(300, 775), linetype = 2, linewidth = 1.2
+  ) +
+  geom_vline(xintercept = c(415, 700), colour = "red", linewidth = 1.5) +
+  theme_void()
+```
+
+
+- By default, the *union* of overlapping ranges will be returned (between black lines)
+    
+. . .
+    
+- Can also return only ranges *covered* by `p` samples (between red lines)
+    
+. . .
+    
+- All/any/no mcols can be returned
+
+
 
 ## Consensus Peaks
 

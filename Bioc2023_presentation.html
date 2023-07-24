@@ -431,23 +431,25 @@ Stevie Pederson (They/Them)
 <section id="who-am-i" class="slide level2">
 <h2>Who Am I?</h2>
 <ul>
-<li>Post-doctoral Bioinformatician at Black Ochre Data Laboratories
+<li>Post-doctoral Bioinformatician at Black Ochre Data Labs
 <ul>
 <li>Telethon Kids Institute, Adelaide, Australia</li>
 <li>Traditional lands of the Kaurna nation</li>
 </ul></li>
-<li>Improving health outcomes for Indigenous Australians</li>
-<li>1400 study participants
+<li>Improving health outcomes for Indigenous Australians
 <ul>
 <li>Type 2 Diabetes, Cardiovascular Disease, Chronic Kidney Disease</li>
+</ul></li>
+<li>1400 study participants
+<ul>
 <li>Genomics, Epigenomics, Transcriptomics, Proteomics, Lipidomics etc</li>
 </ul></li>
 </ul>
 </section>
 <section id="who-am-i-1" class="slide level2">
 <h2>Who Am I?</h2>
+<!-- - Bioinformatics Hub at University of Adelaide (2014-2020) -->
 <ul>
-<li>Bioinformatics Hub at University of Adelaide (2014-2020)</li>
 <li>Dame Roma Mitchell Cancer Research Laboratories (UofA, 2020-2022)
 <ul>
 <li>Integrating multiple ChIP targets across multiple cell lines</li>
@@ -482,14 +484,14 @@ Stevie Pederson (They/Them)
 <div class="fragment">
 <div style="font-size: 90%;">
 <ul>
-<li>Filled several gaps between <code>DiffBind</code> <span class="citation" data-cites="DiffBind2012">(<a href="#/references" role="doc-biblioref" onclick="">Ross-Innes et al. 2012</a>)</span> and <code>csaw</code> <span class="citation" data-cites="csaw2016">(<a href="#/references" role="doc-biblioref" onclick="">Lun and Smyth 2016</a>)</span></li>
+<li>Filled gaps between <code>DiffBind</code> <span class="citation" data-cites="DiffBind2012">(<a href="#/references" role="doc-biblioref" onclick="">Ross-Innes et al. 2012</a>)</span> and <code>csaw</code> <span class="citation" data-cites="csaw2016">(<a href="#/references" role="doc-biblioref" onclick="">Lun and Smyth 2016</a>)</span></li>
 </ul>
 </div>
 </div>
 <div class="fragment">
 <div style="font-size: 90%;">
 <ul>
-<li>All processes designed for existing object classes:
+<li>Use existing object classes:
 <ul>
 <li><code>SummarizedExperiment</code>, <code>GRanges</code>, <code>GRangesList</code>, <code>List</code></li>
 <li><code>BigWigFileList</code>, <code>BamFileList</code> etc</li>
@@ -500,7 +502,7 @@ Stevie Pederson (They/Them)
 <div class="fragment">
 <div style="font-size: 90%;">
 <ul>
-<li>Seamless integration with the <code>tidyverse</code> <span class="citation" data-cites="tidyverse2019">(<a href="#/references" role="doc-biblioref" onclick="">Wickham et al. 2019</a>)</span> + <code>plyranges</code> <span class="citation" data-cites="plyranges">(<a href="#/references" role="doc-biblioref" onclick="">Lee et al. 2019</a>)</span></li>
+<li>Integration with the <code>tidyverse</code> <span class="citation" data-cites="tidyverse2019">(<a href="#/references" role="doc-biblioref" onclick="">Wickham et al. 2019</a>)</span> + <code>plyranges</code> <span class="citation" data-cites="plyranges">(<a href="#/references" role="doc-biblioref" onclick="">Lee et al. 2019</a>)</span></li>
 </ul>
 </div>
 <aside class="notes">
@@ -526,10 +528,9 @@ Stevie Pederson (They/Them)
 <ul>
 <li>Simplify common processes:
 <ul>
-<li>Detection of Differential Signal (Fixed-Width or Sliding Windows)</li>
+<li>Flexible detection of Differential Signal (Fixed-Width or Sliding Windows)</li>
 <li>Maintaining <code>mcols</code> throughout an analysis</li>
-<li>Easier comparison <em>across multiple targets or treatments</em></li>
-<li>Mapping to genes &amp; pre-defined genomic regions/features</li>
+<li>Easier comparison <em>across multiple targets or treatments</em> <!-- + Mapping to genes & pre-defined genomic regions/features --></li>
 <li>Enable common visualisations</li>
 </ul></li>
 </ul>
@@ -622,15 +623,10 @@ Stevie Pederson (They/Them)
 <li>Heavily used internally</li>
 </ul></li>
 </ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Addition of <code>chopMC</code> and <code>distinctMC</code>
-<ul>
-<li>Based on <code>tidyverse</code> functions</li>
-<li>Helpful after multiple sequential joins</li>
-</ul></li>
-</ul>
+<!-- . . .     -->
+<!-- - Addition of `chopMC` and `distinctMC` -->
+<!--     + Based on `tidyverse` functions  -->
+<!--     + Helpful after multiple sequential joins -->
 </div>
 </section>
 <section id="reduce-vs.-reducemc" class="slide level2">
@@ -782,8 +778,8 @@ Stevie Pederson (They/Them)
 <li><code>colToRanges</code> can also move <code>GRanges</code> objects in <code>mcols</code> to the ‘backbone’ ranges</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>x<span class="sc">$</span>centre <span class="ot">&lt;-</span> <span class="fu">GRanges</span>(<span class="fu">paste0</span>(<span class="st">"chr1:"</span>, <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>)), <span class="at">seqinfo =</span> <span class="fu">seqinfo</span>(x))</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21" data-code-line-numbers="1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>x<span class="sc">$</span>centre <span class="ot">&lt;-</span> <span class="fu">GRanges</span>(<span class="fu">paste0</span>(<span class="st">"chr1:"</span>, <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>)), <span class="at">seqinfo =</span> <span class="fu">seqinfo</span>(x))</span>
+<span id="cb21-2"><a href="#cb21-2"></a>x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>GRanges object with 2 ranges and 3 metadata columns:
       seqnames    ranges strand |          id        gene    centre
@@ -795,6 +791,7 @@ Stevie Pederson (They/Them)
 </div>
 </div>
 <div class="fragment">
+<p><br></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colToRanges</span>(x, <span class="at">var =</span> <span class="st">"centre"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -818,29 +815,30 @@ Stevie Pederson (They/Them)
 <h2>Demonstration Data <sup>1</sup></h2>
 <div class="cell columns column-output-location">
 <div class="column">
-<div class="sourceCode cell-code" id="cb25" data-code-line-numbers="1-11|12-19|20-22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a><span class="do">## Define Samples</span></span>
+<div class="sourceCode cell-code" id="cb25" data-code-line-numbers="1-12,21-23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a><span class="do">## Define Samples</span></span>
 <span id="cb25-2"><a href="#cb25-2"></a>treat_levels <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"E2"</span>, <span class="st">"E2DHT"</span>)</span>
-<span id="cb25-3"><a href="#cb25-3"></a>samples <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb25-4"><a href="#cb25-4"></a>  <span class="at">accession =</span> <span class="fu">paste0</span>(<span class="st">"SRR83151"</span>, <span class="fu">seq</span>(<span class="dv">80</span>, <span class="dv">91</span>)),</span>
-<span id="cb25-5"><a href="#cb25-5"></a>  <span class="at">target =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">"ER"</span>, <span class="st">"H3K27ac"</span>), <span class="at">each =</span> <span class="dv">6</span>),</span>
-<span id="cb25-6"><a href="#cb25-6"></a>  <span class="at">treatment =</span> treat_levels <span class="sc">%&gt;%</span> </span>
-<span id="cb25-7"><a href="#cb25-7"></a>    <span class="fu">rep</span>(<span class="at">each =</span> <span class="dv">3</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-8"><a href="#cb25-8"></a>    <span class="fu">rep_len</span>(<span class="dv">12</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-9"><a href="#cb25-9"></a>    <span class="fu">factor</span>(<span class="at">levels =</span> treat_levels),</span>
-<span id="cb25-10"><a href="#cb25-10"></a>  <span class="at">input =</span> <span class="st">"SRR8315192"</span></span>
-<span id="cb25-11"><a href="#cb25-11"></a>)</span>
-<span id="cb25-12"><a href="#cb25-12"></a><span class="do">## Setup colours for consistent plotting</span></span>
-<span id="cb25-13"><a href="#cb25-13"></a>treat_colours <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
-<span id="cb25-14"><a href="#cb25-14"></a>  <span class="fu">c</span>(<span class="st">"steelblue"</span>, <span class="st">"red3"</span>), treat_levels</span>
-<span id="cb25-15"><a href="#cb25-15"></a>)</span>
-<span id="cb25-16"><a href="#cb25-16"></a>sample_colours <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
-<span id="cb25-17"><a href="#cb25-17"></a>  treat_colours[samples<span class="sc">$</span>treatment], </span>
-<span id="cb25-18"><a href="#cb25-18"></a>  samples<span class="sc">$</span>accession</span>
-<span id="cb25-19"><a href="#cb25-19"></a>)</span>
-<span id="cb25-20"><a href="#cb25-20"></a><span class="do">## Split for easier wrangling</span></span>
-<span id="cb25-21"><a href="#cb25-21"></a>samples <span class="ot">&lt;-</span> <span class="fu">split</span>(samples, samples<span class="sc">$</span>target)</span>
-<span id="cb25-22"><a href="#cb25-22"></a>samples</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div><div class="column fragment">
+<span id="cb25-3"><a href="#cb25-3"></a>targets <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ER"</span>, <span class="st">"H3K27ac"</span>)</span>
+<span id="cb25-4"><a href="#cb25-4"></a>samples <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb25-5"><a href="#cb25-5"></a>  <span class="at">accession =</span> <span class="fu">paste0</span>(<span class="st">"SRR83151"</span>, <span class="fu">seq</span>(<span class="dv">80</span>, <span class="dv">91</span>)),</span>
+<span id="cb25-6"><a href="#cb25-6"></a>  <span class="at">target =</span> <span class="fu">rep</span>(targets, <span class="at">each =</span> <span class="dv">6</span>),</span>
+<span id="cb25-7"><a href="#cb25-7"></a>  <span class="at">treatment =</span> treat_levels <span class="sc">%&gt;%</span> </span>
+<span id="cb25-8"><a href="#cb25-8"></a>    <span class="fu">rep</span>(<span class="at">each =</span> <span class="dv">3</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-9"><a href="#cb25-9"></a>    <span class="fu">rep_len</span>(<span class="dv">12</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-10"><a href="#cb25-10"></a>    <span class="fu">factor</span>(<span class="at">levels =</span> treat_levels),</span>
+<span id="cb25-11"><a href="#cb25-11"></a>  <span class="at">input =</span> <span class="st">"SRR8315192"</span></span>
+<span id="cb25-12"><a href="#cb25-12"></a>)</span>
+<span id="cb25-13"><a href="#cb25-13"></a><span class="do">## Setup colours for consistent plotting</span></span>
+<span id="cb25-14"><a href="#cb25-14"></a>treat_colours <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
+<span id="cb25-15"><a href="#cb25-15"></a>  <span class="fu">c</span>(<span class="st">"steelblue"</span>, <span class="st">"red3"</span>), treat_levels</span>
+<span id="cb25-16"><a href="#cb25-16"></a>)</span>
+<span id="cb25-17"><a href="#cb25-17"></a>sample_colours <span class="ot">&lt;-</span> <span class="fu">setNames</span>(</span>
+<span id="cb25-18"><a href="#cb25-18"></a>  treat_colours[samples<span class="sc">$</span>treatment], </span>
+<span id="cb25-19"><a href="#cb25-19"></a>  samples<span class="sc">$</span>accession</span>
+<span id="cb25-20"><a href="#cb25-20"></a>)</span>
+<span id="cb25-21"><a href="#cb25-21"></a><span class="do">## Split for easier wrangling</span></span>
+<span id="cb25-22"><a href="#cb25-22"></a>samples <span class="ot">&lt;-</span> <span class="fu">split</span>(samples, samples<span class="sc">$</span>target)</span>
+<span id="cb25-23"><a href="#cb25-23"></a>samples</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div><div class="column">
 <div class="cell-output cell-output-stdout">
 <pre><code>$ER
 # A tibble: 6 × 4
@@ -882,7 +880,7 @@ $H3K27ac
           overflow: hidden!important;
           display:block!important;
       }</style></aside>
-<aside><ol class="aside-footnotes"><li id="fn1"><p>Taken from SRA BioProject PRJNA509779 and subset to a region of chr10</p></li></ol></aside></section>
+<aside><ol class="aside-footnotes"><li id="fn1"><p>Taken from SRA BioProject PRJNA509779 <span class="citation" data-cites="Hickey2021-mz">(<a href="#/references" role="doc-biblioref" onclick="">Hickey et al. 2021</a>)</span> and subset to a region of chr10</p></li></ol></aside></section>
 <section id="data-directory-contents" class="slide level2">
 <h2>Data Directory Contents</h2>
 <div class="cell">
@@ -936,22 +934,45 @@ $H3K27ac
 <section id="additional-objects" class="slide level2">
 <h2>Additional Objects</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28" data-code-line-numbers="1-3|4-9|10-1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a>sq <span class="ot">&lt;-</span> <span class="fu">Seqinfo</span>(</span>
-<span id="cb28-2"><a href="#cb28-2"></a>  <span class="at">seqnames =</span> <span class="st">"chr10"</span>, <span class="at">seqlengths =</span> <span class="dv">135534747</span>, <span class="at">isCircular =</span> <span class="cn">FALSE</span>,  <span class="at">genome =</span> <span class="st">"hg19"</span></span>
-<span id="cb28-3"><a href="#cb28-3"></a>)</span>
-<span id="cb28-4"><a href="#cb28-4"></a>gtf <span class="ot">&lt;-</span> <span class="fu">file.path</span>(</span>
-<span id="cb28-5"><a href="#cb28-5"></a>  <span class="st">"data"</span>, <span class="st">"annotations"</span>, <span class="st">"gencode.v43lift37.chr10.annotation.gtf.gz"</span></span>
-<span id="cb28-6"><a href="#cb28-6"></a>) <span class="sc">%&gt;%</span> </span>
-<span id="cb28-7"><a href="#cb28-7"></a>  <span class="fu">import.gff</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb28-8"><a href="#cb28-8"></a>  <span class="fu">split</span>(.<span class="sc">$</span>type)</span>
-<span id="cb28-9"><a href="#cb28-9"></a><span class="fu">seqinfo</span>(gtf) <span class="ot">&lt;-</span> sq</span>
-<span id="cb28-10"><a href="#cb28-10"></a><span class="do">## Define black &amp; grey-lists</span></span>
-<span id="cb28-11"><a href="#cb28-11"></a>bg_list <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">"data"</span>, <span class="st">"annotations"</span>, <span class="fu">c</span>(<span class="st">"chr10_blacklist.bed"</span>, <span class="st">"chr10_greylist.bed"</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb28-12"><a href="#cb28-12"></a>  <span class="fu">lapply</span>(import.bed, <span class="at">seqinfo =</span> sq) <span class="sc">%&gt;%</span> </span>
-<span id="cb28-13"><a href="#cb28-13"></a>  <span class="fu">lapply</span>(granges) <span class="sc">%&gt;%</span> </span>
-<span id="cb28-14"><a href="#cb28-14"></a>  <span class="fu">GRangesList</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb28-15"><a href="#cb28-15"></a>  <span class="fu">unlist</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb28-16"><a href="#cb28-16"></a>  <span class="fu">sort</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28" data-code-line-numbers="1-4|6-13|14-20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="do">## A consistent Seqinfo object</span></span>
+<span id="cb28-2"><a href="#cb28-2"></a>sq <span class="ot">&lt;-</span> <span class="fu">Seqinfo</span>(</span>
+<span id="cb28-3"><a href="#cb28-3"></a>  <span class="at">seqnames =</span> <span class="st">"chr10"</span>, <span class="at">seqlengths =</span> <span class="dv">135534747</span>, <span class="at">isCircular =</span> <span class="cn">FALSE</span>,  <span class="at">genome =</span> <span class="st">"hg19"</span></span>
+<span id="cb28-4"><a href="#cb28-4"></a>)</span>
+<span id="cb28-5"><a href="#cb28-5"></a></span>
+<span id="cb28-6"><a href="#cb28-6"></a><span class="do">## Gene Annotations as a GTF, split by feature type</span></span>
+<span id="cb28-7"><a href="#cb28-7"></a>gtf <span class="ot">&lt;-</span> <span class="fu">file.path</span>(</span>
+<span id="cb28-8"><a href="#cb28-8"></a>  <span class="st">"data"</span>, <span class="st">"annotations"</span>, <span class="st">"gencode.v43lift37.chr10.annotation.gtf.gz"</span></span>
+<span id="cb28-9"><a href="#cb28-9"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-10"><a href="#cb28-10"></a>  <span class="fu">import.gff</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb28-11"><a href="#cb28-11"></a>  <span class="fu">split</span>(.<span class="sc">$</span>type)</span>
+<span id="cb28-12"><a href="#cb28-12"></a><span class="fu">seqinfo</span>(gtf) <span class="ot">&lt;-</span> sq</span>
+<span id="cb28-13"><a href="#cb28-13"></a></span>
+<span id="cb28-14"><a href="#cb28-14"></a><span class="do">## Black &amp; grey-lists (From ENCODE &amp; Input Sample)</span></span>
+<span id="cb28-15"><a href="#cb28-15"></a>bg_list <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">"data"</span>, <span class="st">"annotations"</span>, <span class="fu">c</span>(<span class="st">"chr10_blacklist.bed"</span>, <span class="st">"chr10_greylist.bed"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-16"><a href="#cb28-16"></a>  <span class="fu">lapply</span>(import.bed, <span class="at">seqinfo =</span> sq) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-17"><a href="#cb28-17"></a>  <span class="fu">lapply</span>(granges) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-18"><a href="#cb28-18"></a>  <span class="fu">GRangesList</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb28-19"><a href="#cb28-19"></a>  <span class="fu">unlist</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb28-20"><a href="#cb28-20"></a>  <span class="fu">sort</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="working-with-peaks-1" class="slide level2">
+<h2>Working With Peaks</h2>
+<p>Key Steps:</p>
+<ol type="1">
+<li>Load peaks identified in individual samples (e.g.&nbsp;<code>macs2 callpeak</code>)</li>
+</ol>
+<div class="fragment">
+<ol start="2" type="1">
+<li>Find overlapping regions within x% of replicates <span class="math inline">\(\implies\)</span> <em>consensus peaks</em>
+<ul>
+<li>Can be formed within treatment groups</li>
+<li>Merged across treatment groups</li>
+</ul></li>
+</ol>
+</div>
+<div class="fragment">
+<p>Peak callers often produce narrowPeak/broadPeak files</p>
 </div>
 </section>
 <section id="importing-peaks" class="slide level2">
@@ -970,9 +991,9 @@ $H3K27ac
 <span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>  ...</span>
 <span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ul>
-<li>Import broad/narrowPeak files from <code>macs2 callpeak</code> or another peak-caller</li>
-<li>Returns a <code>GRangesList</code></li>
-<li>Only chromosomes/scaffolds within the <code>seqinfo</code> object will be returned</li>
+<li>Import broad/narrowPeak files <span class="math inline">\(\implies\)</span> <code>GRangesList</code></li>
+<li><strong>Only chromosomes/scaffolds within the <code>seqinfo</code> object will be returned</strong></li>
+<li>Blacklisted regions can be omitted during parsing</li>
 <li>Peak Centres can be automatically added for <code>narrowPeak</code> files</li>
 </ul>
 </section>
@@ -1030,11 +1051,23 @@ GRanges object with 123 ranges and 6 metadata columns:
 
 </div>
 <img data-src="Bioc2023_presentation_files/figure-revealjs/plot-overlaps-1.png" width="960" class="r-stretch"><ul>
-<li>Calls <code>ComplexUpset::upset()</code> if n <span class="math inline">\(\geq\)</span> 3
+<li>Calls <code>ComplexUpset::upset()</code> if n <span class="math inline">\(\geq\)</span> 3</li>
+</ul>
+<aside class="notes">
 <ul>
 <li><code>...</code> is passed to <code>upset()</code></li>
-</ul></li>
 </ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 
 <section id="consensus-peaks" class="slide level2">
@@ -1073,13 +1106,25 @@ GRanges object with 123 ranges and 6 metadata columns:
   seqinfo: 1 sequence from hg19 genome</code></pre>
 </div>
 </div>
-<ul>
-<li>By default, the <em>union</em> of overlapping ranges will be returned</li>
-<li>Can also return only ranges <em>covered</em> by <code>p</code> samples</li>
-<li>Any/all mcols can be returned</li>
-</ul>
 </section>
 <section id="consensus-peaks-1" class="slide level2">
+<h2>Consensus Peaks</h2>
+
+<img data-src="Bioc2023_presentation_files/figure-revealjs/olap-ranges-1.png" width="960" class="r-stretch"><ul>
+<li>By default, the <em>union</em> of overlapping ranges will be returned (between black lines)</li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Can also return only ranges <em>covered</em> by <code>p</code> samples (between red lines)</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>All/any/no mcols can be returned</li>
+</ul>
+</div>
+</section>
+<section id="consensus-peaks-2" class="slide level2">
 <h2>Consensus Peaks</h2>
 <p>To find peaks identified in 2/3 samples in either condition:</p>
 <div class="cell">
@@ -1132,7 +1177,7 @@ GRanges object with 160 ranges and 1 metadata column:
 </div>
 </div>
 </section>
-<section id="consensus-peaks-2" class="slide level2">
+<section id="consensus-peaks-3" class="slide level2">
 <h2>Consensus Peaks</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotOverlaps</span>(treatment_peaks, <span class="at">set_col =</span> treat_colours)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1142,7 +1187,7 @@ GRanges object with 160 ranges and 1 metadata column:
 <li>Produces a VennDiagram when n = 2</li>
 </ul>
 </section>
-<section id="consensus-peaks-3" class="slide level2">
+<section id="consensus-peaks-4" class="slide level2">
 <h2>Consensus Peaks</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb39" data-code-line-numbers="1|2|3|4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1"></a>union_peaks <span class="ot">&lt;-</span> <span class="fu">makeConsensus</span>(treatment_peaks, <span class="at">var =</span> <span class="st">"centre"</span>)</span>
@@ -2533,6 +2578,9 @@ Chen, Yunshun, Aaron A T Lun, and Gordon K Smyth. 2016. <span>“From Reads to G
 </div>
 <div id="ref-gviz" class="csl-entry" role="listitem">
 Hahne, Florian, and Robert Ivanek. 2016. <span>“Statistical Genomics: Methods and Protocols.”</span> In, edited by Ewy Mathé and Sean Davis, 335–51. New York, NY: Springer New York. <a href="https://doi.org/10.1007/978-1-4939-3578-9_16">https://doi.org/10.1007/978-1-4939-3578-9_16</a>.
+</div>
+<div id="ref-Hickey2021-mz" class="csl-entry" role="listitem">
+Hickey, Theresa E, Luke A Selth, Kee Ming Chia, Geraldine Laven-Law, Heloisa H Milioli, Daniel Roden, Shalini Jindal, et al. 2021. <span>“The Androgen Receptor Is a Tumor Suppressor in Estrogen Receptor-Positive Breast Cancer.”</span> <em>Nat. Med.</em> 27 (2): 310–20.
 </div>
 <div id="ref-Law2014-xq" class="csl-entry" role="listitem">
 Law, Charity W, Yunshun Chen, Wei Shi, and Gordon K Smyth. 2014. <span>“Voom: Precision Weights Unlock Linear Model Analysis Tools for <span class="nocase">RNA-seq</span> Read Counts.”</span> <em>Genome Biol.</em> 15 (2): R29.
