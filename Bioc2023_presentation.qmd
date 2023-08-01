@@ -78,6 +78,7 @@ theme_set(theme_bw())
 
 
 ::: {.notes}
+- Regulatory dynamics we were interested in wree primarily about which genes were being impacted by changes in AR/ER binding. Was AR omving ER away from proliferative genes 
 - Not intended to be a strict "tidy" implementation of ChIP-Seq
 - GRAVI itself is a snakemake workflow
 :::
@@ -125,15 +126,15 @@ theme_set(theme_bw())
 
 ::: {.column}
 
-#### Working With GRanges 
+#### Core Infrastructure
 
-- `reduceMC`, `intersectMC`, `setdiffMC`, `unionMC` etc
+- `reduceMC`, `intersectMC`, `setdiffMC`, `unionMC`
+- `chopMC`, `distinctMC`
 - `as_tibble`, `colToRanges`
 
 <br>
 
-
-#### Integrating Peaks/GRanges
+#### Working With Peaks/GRanges
 
 - `importPeaks`, `makeConsensus`, `plotOverlaps`
 - `bestOverlap`, `propOverlap`
@@ -149,10 +150,10 @@ theme_set(theme_bw())
 #### Differential Signal Analysis
 
 - `fitAssayDiff`, `addDiffStatus`
-- `dualFilter`, `mergeByHMP`, `mergeByCol`, `mergeBySig`
+- `dualFilter`, 
+- `mergeByHMP`, `mergeByCol`, `mergeBySig`
 
 <br>
-
 
 #### Visualisations
 
@@ -208,11 +209,16 @@ x
 
 . . . 
 
-`reduce` will simply combine overlapping ranges
+`reduce` will simply combine (i.e. reduce) overlapping ranges
 
 ```{r, echo = TRUE}
 reduce(x)
 ```
+
+
+::: {.notes}
+- Here we have two partially overlapping ranges
+:::
 
 ## `reduce` Vs. `reduceMC`
 
@@ -262,7 +268,7 @@ colToRanges(tbl, var = "range")
 
 . . .
 
-- Seqinfo objects can also be specified
+Seqinfo objects can also be provided
 
 ```{r}
 colToRanges(tbl, var = "range", seqinfo = seqinfo(x))
@@ -270,7 +276,7 @@ colToRanges(tbl, var = "range", seqinfo = seqinfo(x))
 
 
 
-## `colToRanges()`
+## `colToRanges`
 
 - `colToRanges` can also move `GRanges` objects in `mcols` to the 'backbone' ranges
 
@@ -288,6 +294,10 @@ x
 colToRanges(x, var = "centre")
 ```
 
+
+::: {.notes}
+- Here I'm first adding the peak centre as a new mcols column, then shifting this to be the core range
+:::
 
 
 # Working With Peaks  {background-color="#3c3c44" background-image=https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/extraChIPs/extraChIPs.png background-size="35%" background-opacity="0.2"}
@@ -357,7 +367,7 @@ cat(twee("data"), sep = "\n")
 ## Additional Objects
 
 ```{r setup-extra}
-#| code-line-numbers: '1-4|6-13|14-20|22-29'
+#| code-line-numbers: '1-4|6-13|14-20|22-27'
 ## A consistent Seqinfo object
 sq <- Seqinfo(
   seqnames = "chr10", seqlengths = 135534747, isCircular = FALSE,  genome = "hg19"
@@ -380,9 +390,7 @@ bg_list <- file.path("data", "annotations", c("chr10_blacklist.bed", "chr10_grey
   sort()
 
 ## Setup colours for consistent plotting
-treat_colours <- setNames(
-  c("steelblue", "red3"), treat_levels
-)
+treat_colours <- c(E2 = "steelblue", E2DHT = "red3")
 sample_colours <- setNames(
   treat_colours[bind_rows(samples)$treatment], 
   bind_rows(samples)$accession
@@ -441,7 +449,7 @@ names(peaks) <- samples$ER$accession
 peaks
 ```
 
-## `plotOverlaps()`
+## Comparing Replicates
 
 ```{r plot-overlaps}
 plotOverlaps(peaks, set_col = sample_colours)
@@ -472,6 +480,12 @@ plotOverlaps(
 makeConsensus(peaks[1:3], var = "centre", p = 2/3)
 ```
 
+. . .
+
+<br>
+    
+- All/any/no mcols can be returned
+
 
 ## makeConsensus
 
@@ -495,11 +509,10 @@ tibble(
 ```
 
 
-- By default, the *union* of overlapping ranges will be returned (between black lines)
+- By default, the *union* of overlapping ranges will be returned 
+    + between black lines
 
-. . .
-    
-- All/any/no mcols can be returned
+<br>
     
 ## makeConsensus
 
@@ -521,10 +534,8 @@ tibble(
 ```
 
 
-- Can also return only ranges *covered* by $>p\times n$ samples (between red lines)
-
-. . .
-
+- Can also return only ranges *covered* by $>p\times n$ samples 
+    + between red lines
 - `method = "coverage"`
     
 
@@ -557,18 +568,20 @@ plotOverlaps(treatment_peaks, set_col = treat_colours)
 ## Consensus Peaks
 
 ```{r union-peaks}
-#| code-line-numbers: '1|2-7|8|1-9'
+#| code-line-numbers: '1|2-6|1-7'
 #| output-location: fragment
 union_peaks <- makeConsensus(treatment_peaks, var = "centre") %>% 
   mutate(
-    centre = paste0(
-      seqnames, ":", round(vapply(centre, mean, numeric(1)), 0)
-    ) %>% 
-      GRanges(seqinfo = sq)
+    centre =  round(vapply(centre, mean, numeric(1)), 0),
+    centre = paste0(seqnames, ":", centre) %>% GRanges(seqinfo = sq)
   ) %>% 
   select(centre)
 union_peaks
 ```
+
+. . .
+
+- Peak centres are the mean from all replicates with an overlapping peak
 
 
 ## Mapping Peaks
@@ -700,7 +713,7 @@ Now that we have our peaks mapped to genomic regions, we can use `plotPie()`
 ## `plotPie` {.scrollable}
 
 ```{r plot-pie-labels, fig.height=6, fig.width=8, fig.show='hide'}
-#| code-line-numbers: '2|3|4'
+#| code-line-numbers: '2|4'
 plotPie(
   union_peaks, fill = "region", 
   min_p = 0.05, total_size = 4.5, cat_alpha = 0.7, cat_adj = 0.05,
@@ -709,9 +722,9 @@ plotPie(
   scale_fill_viridis_d(direction = -1)
 ```
 
-- Can hide labels for infrequent overlaps (`min_p = 0.05`) and:
-    + Adjust size of totals (`total_size = 4.5`)
-    + Transparency, position of category labels etc
+<!-- - Can hide labels for infrequent overlaps (`min_p = 0.05`) and: -->
+<!--     + Adjust size of totals (`total_size = 4.5`) -->
+<!--     + Transparency, position of category labels etc -->
 
 - Label text is highly customisable
     + Uses `glue` syntax $\implies$ can include function calls and line-breaks
@@ -776,7 +789,7 @@ union_peaks[1:5]
 
 # Differential Signal Analysis {background-color="#3c3c44" background-image=https://raw.githubusercontent.com/Bioconductor/BiocStickers/devel/extraChIPs/extraChIPs.png background-size="35%" background-opacity="0.2"}
 
-## Two approaches to Differential Signal Analysis
+## Two Approaches to Differential Signal Analysis
 
 ::: {.notes}
 - `dualFilter()` wraps both `filterWindowsProportion()` and `filterWindowsControl()`
@@ -811,23 +824,26 @@ Extends `csaw` approaches
 :::
 
 ::: {.notes}
+- Conventionally, sliding windows don't require pre-defined peaks
 - dualFilter sets thresholds for signal above input & total signal using guide ranges
 - If no input provided, `dualFilter` only uses total signal
 :::
 
-## Two approaches to Differential Signal Analysis
+## Differential Signal Analysis
 
-- Multiple visualisation functions after counting reads
-    + `plotAssay*` for `SummarizedExperiment` objects
+- Visualisation functions after counting reads
+    + `plotAssayPCA`, `plotAssayRle`, `plotAssayDensities`
+    
+. . .
+    
 - Differential Signal Analysis: `fitAssayDiff()` 
     + `edgeR::glmQLF()` or `limma-trend`
 
 . . .
 
 - Sliding window analysis $\implies$ merge neighboring windows
-    + `mergeByCol()`: Choose a window by values in one column
-    + `mergeBySig()`: Wraps `csaw` methods (`combineTests`, `getBestTest`, `minimalTests`)
     + `mergeByHMP()` [*uses harmonic-mean p*]{.underline} [@Wilson2019-ln]
+    + `mergeByCol()`, `mergeBySig()`: wraps `csaw` methods
     + All return the relevant underlying windows (`keyval_range`)
     
 ::: {.notes}
@@ -840,7 +856,7 @@ Extends `csaw` approaches
 ## Fixed-Width Windows 
 
 ```{r count-fixed}
-#| code-line-numbers: '3-8|1-24'
+#| code-line-numbers: '3-7|8-11|12-14|15-18|1-23'
 library(Rsamtools)
 library(csaw)
 ## Centre & resize the peaks
@@ -855,15 +871,15 @@ er_bfl <- file.path("data", "ER", paste0(samples$ER$accession, ".bam")) %>%
 ## Count Reads
 er_se <- regionCounts(er_bfl, centred_peaks, ext = 200)
 seqinfo(er_se) <- sq
+## Re-assign union peaks to core ranges after counting
+rowRanges(er_se) <- rowRanges(er_se) %>% 
+  colToRanges(var = "union_peak") %>% 
+  select(region, starts_with("gene"))
 ## Add all sample annotations
 colData(er_se) <- colData(er_se) %>% 
   as_tibble(rownames = "accession") %>% 
   left_join(samples$ER) %>% 
   as("DataFrame")
-## Re-assign union peaks to core ranges after counting
-rowRanges(er_se) <- rowRanges(er_se) %>% 
-  colToRanges(var = "union_peak") %>% 
-  select(region, starts_with("gene"))
 ```
 
 ::: {.notes}
@@ -929,10 +945,11 @@ This is helpful when amount of signal may vary between treatments, such as may b
 
 
 ```{r count-sliding}
-#| code-line-numbers: '10-15|1-18'
+#| code-line-numbers: '1-6|7-16|1-17'
 #| output-location: fragment
 ## Define the BamFile List INCLUDING the Input
-acc <- unique(c(samples$H3K27ac$accession, samples$H3K27ac$input))
+acc <- c(samples$H3K27ac$accession, samples$H3K27ac$input) %>% 
+  unique()
 h3k_bfl <- file.path("data", "H3K27ac", paste0(acc, ".bam")) %>% 
   BamFileList() %>% 
   setNames(acc)
@@ -946,10 +963,14 @@ wincounts <- windowCounts(
   spacing = win_step, width = win_size, ext = 200,
   filter = length(h3k_bfl), param = rp
 )
-seqlevels(wincounts) <- seqlevels(sq)
-seqinfo(wincounts) <- sq
 dim(wincounts)
 ```
+
+```{r, echo = FALSE}
+seqlevels(wincounts) <- seqlevels(sq)
+seqinfo(wincounts) <- sq
+```
+
 
 ## Filter Sliding Windows
 
@@ -1055,11 +1076,14 @@ Note that we're applying a range-based H~0~ such we're only interested in sites 
 plotSplitDonut(er_results, inner = "region", outer = "status")
 ```
 
-## plotSplitDonut {.scrollable}
+## plotSplitDonut
 
-```{r plot-donut-custom, fig.height=6.5, fig.width=9}
-#| output-location: slide
-#| code-line-numbers: '1-7,9-10|11-12|13|14'
+![](Bioc2023_presentation_files/figure-revealjs/plot-donut-custom-1.png)
+
+## plotSplitDonut
+
+```{r plot-donut-custom, fig.height=6.5, fig.width=9, fig.show='hide'}
+#| code-line-numbers: '1-7,9-10|11-12|14'
 ## Define inner & outer palettes
 region_colours <- hcl.colors(length(region_levels), "viridis", rev = TRUE)
 names(region_colours) <- region_levels
@@ -1079,7 +1103,6 @@ plotSplitDonut(
 
 - Can set inner and outer palettes separately
 - Labels are customisable using `glue`
-- Only show labels for rare events
 - Explode segments based `regex` queries
 
 ## Sliding Windows
@@ -1199,12 +1222,12 @@ all_results %>%
 ```
 
 
-## mapGrlCols {.scrollable}
+## mapGrlCols {visibility="hidden"}
 
 - Multiple easy options for downstream analysis
 
-```{r plot-er-h3k-donut, fig.height=6.5}
-#| output-location: slide
+```{r plot-er-h3k-donut, fig.height=6.5, eval = FALSE}
+#| output-location: default
 #| code-line-numbers: '2-7|1-20'
 all_results %>% 
   mapGrlCols(var = "status") %>% 
@@ -1240,11 +1263,16 @@ plotPairwise(all_results, var = "logCPM")
 Here we can see that there tends to be higher signal where both are detected
 :::
 
-## plotPairwise: logFC {.scrollable}
+## plotPairwise: logFC 
 
-```{r plot-pairwise-logfc, fig.height=6.5}
+![](Bioc2023_presentation_files/figure-revealjs/plot-pairwise-logfc-1.png)
+
+## plotPairwise: logFC 
+
+
+```{r plot-pairwise-logfc, fig.height=6.5, fig.show = 'hide'}
 #| code-line-numbers: '2|5,9,10'
-#| output-location: slide
+#| output-location: default
 plotPairwise(
   all_results, var = "logFC", colour = "status", label = "gene_name"
 ) +
@@ -1398,10 +1426,14 @@ cov_annot <- list(
 
 :::
 
-## plotHFGC {.scrollable}
+## plotHFGC 
 
-```{r plotHFGC}
-#| output-location: slide
+![](Bioc2023_presentation_files/figure-revealjs/plotHFGC-1.png)
+
+## plotHFGC 
+
+```{r plotHFGC, fig.show='hide'}
+#| output-location: default
 gr <- all_results %>% 
   mapGrlCols(var = "status", collapse = "gene_name") %>% 
   filter(
