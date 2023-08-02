@@ -11,7 +11,10 @@ package: extraChIPs
 bibliography: references.bib
 output:
   BiocStyle::html_document:
-    self_contained: false
+    self_contained: true
+    toc_float: true
+    fig_width: 8
+    fig_height: 6
 abstract: |
   extraChIPs: Package Demo
 vignette: |
@@ -100,13 +103,20 @@ The sample sheet for the ER$\alpha$ samples can be setup by copying the followin
 As can be seen, we have three samples from the E2 (baseline) group with three more treated by the addition of DHT.
 
 ```{r er_samples}
+targets <- c("ER", "H3K27ac")
 treat_levels <- c("E2", "E2DHT")
-er_samples <- tibble(
-  accession = paste0("SRR831518", seq(0, 5)),
-  target = "ER",
-  treatment = factor(rep(treat_levels, each = 3), levels = treat_levels)
+samples <- tibble(
+  accession = paste0("SRR83151", 80:91),
+  target = rep(targets, each = 6),
+  treatment = treat_levels %>% 
+    rep(each = 3) %>% 
+    rep_len(12) %>% 
+    factor(levels = treat_levels),
+  input = "SRR8315192"
 )
-er_samples
+## Split for easier wrangling
+samples <- split(samples, samples$target)
+samples
 ```
 
 We'll also setup colours for each treatment for consistent visualisations throughout the analysis
@@ -186,14 +196,26 @@ as_tibble(x, rangeAsChar = FALSE)
 
 Additional methods have been implemented for easy coercion of `DataFrame`, `GInteractions`, `Seqinfo`, `SummarzedExperiment` and `TopTags` objects
 
+## `colToRanges`
+
 Coercion is implemented from `tibble` to `GRanges` using `colToRanges()`
 
 ```{r col-to-ranges}
 colToRanges(tbl, var = "range")
+colToRanges(tbl, var = "range", seqinfo = seqinfo(x))
 ```
 
-Whilst the `seqinfo` is clearly lost in the reverse coercion, `colToRanges()` also allows for moving a `GRanges` object within the `mcols` element to be set as a new set of ranges.
-In this case, the `seqinfo` will be retained.
+Whilst the `seqinfo` is clearly lost in the reverse coercion, `colToRanges()` a seqinfo object can be provided.
+
+`colToRanges` can also move `GRanges` objects in `mcols` to the 'backbone' ranges.
+Here we'll add a column which contains the peak centre to our original set of ranges, then we'll move that to become the 'backbone' ranges.
+
+```{r}
+x$centre <- GRanges(paste0("chr1:", c(5, 10)), seqinfo = seqinfo(x))
+x
+colToRanges(x, var = "centre")
+```
+
 
 # Working With Peaks
 
@@ -204,7 +226,7 @@ This will always return a `GRangesList` for simple downstream analysis.
 If importing `narrowPeak` files, the peak centre can be automatically added.
 
 ```{r import-peaks}
-fl <- glue("data/ER/{er_samples$accession}_peaks.narrowPeak")
+fl <- glue("data/ER/{samples$ER$accession}_peaks.narrowPeak")
 peaks <- importPeaks(fl, seqinfo = sq, centre = TRUE)
 names(peaks) <- str_remove_all(names(peaks), "_peaks.narrowPeak")
 ```
@@ -234,7 +256,7 @@ This can easily be performed using `plotOverlaps()`
 
 
 ```{r plot-overlaps, fig.cap = "Overlapping peaks between all replicates"}
-plotOverlaps(peaks, set_col = treat_colours[er_samples$treatment])
+plotOverlaps(peaks, set_col = treat_colours[samples$ER$treatment])
 ```
 
 `plotOverlaps()` calls the plotting functions provided by `ComplexUpset::upset()` [@ComplexUpset2020] and as such, can handle any additional parameters which are understood by this function.
@@ -242,7 +264,7 @@ plotOverlaps(peaks, set_col = treat_colours[er_samples$treatment])
 ```{r plot-overlaps2, fig.cap = "Overlapping peaks, showing only intersections with 10 or more members and retaining the original sample ordering"}
 plotOverlaps(
   peaks, .sort_sets = FALSE, 
-  set_col = treat_colours[er_samples$treatment], n_intersections = 10
+  set_col = treat_colours[samples$ER$treatment], n_intersections = 10
 )
 ```
 
@@ -264,7 +286,7 @@ makeConsensus(peaks[1:3], p = 2/3, var = "centre")
 
 By default, this takes the union of the ranges called as peaks in each sample.
 We may instead prefer to just retain regions *covered* in $\geq$ 2/3 samples.
-Not that whilst we have the same number of ranges here, the ranges are tighter.
+Not that whilst we have the same number of ranges in this particular example, the ranges are tighter.
 
 ```{r make-consensus-coverage}
 makeConsensus(peaks[1:3], p = 2/3, method = "coverage")
@@ -274,7 +296,7 @@ In order to make consensus peaks for each condition, we can split by treatment g
 
 ```{r lapply-consenses}
 cons_peaks <- peaks %>% 
-  split(f = er_samples$treatment) %>% 
+  split(f = samples$ER$treatment) %>% 
   lapply(makeConsensus, p = 2/3, var = "centre") %>% 
   lapply(select, centre) %>% 
   lapply(mutate, centre = vapply(centre, mean, numeric(1))) %>% 
@@ -283,7 +305,7 @@ cons_peaks <- peaks %>%
 
 A lot happened in that code chunk, so let's break it down
 
-1. We split samples based on the treatment (`split(f = er_samples$treatment)`), then
+1. We split samples based on the treatment (`split(f = samples$ER$treatment)`), then
 2. Identified consensus peaks within each treatment found in 2/3 samples, retaining the peak centre (`lapply(makeConsensus, p = 2/3, var = "centre")`)
 3. Subset the `mcols` to only retain the peak centre (`lapply(select, centre)`). 
 4. The previous step returned centre estimates as a `NumericList`, so we took the mean of these for each consensus peak
@@ -405,8 +427,9 @@ centred_peaks <- union_peaks %>%
     centre = paste0(seqnames, ":", centre),
     union_peak = granges(.)
   ) %>% 
-  colToRanges(var = "centre") %>% 
+  colToRanges(var = "centre", seqinfo = sq) %>% 
   resize(width = 400, fix = "center") 
+centred_peaks
 ```
 
 In the above, we've 1) created a new range from the centre-points, 2) placed the original range as a new column in the `mcols` element, 3) moved the centred range to being the primary range using `colToRanges()`.
@@ -416,21 +439,21 @@ The bam files should be in the `data` directory and can be formed into a `BamFil
 This will return a `RangedSummarizedExperiment` with totals from the entire bam file in the `totals` column of the `colData` element
 
 ```{r load-er-counts}
-er_bfl <- file.path("data", "ER", paste0(er_samples$accession, ".bam")) %>% 
+er_bfl <- file.path("data", "ER", paste0(samples$ER$accession, ".bam")) %>% 
   BamFileList() %>% 
-  setNames(er_samples$accession)
+  setNames(samples$ER$accession)
 er_se <- regionCounts(er_bfl, centred_peaks, ext = 200)
 seqinfo(er_se) <- sq
 er_se
 colData(er_se)
 ```
 
-Let's ensure our sample metadata is consistent between this object and `er_samples`
+Let's ensure our sample metadata is consistent between this object and `samples$ER`
 
 ```{r modify-er-coldata}
 colData(er_se) <- colData(er_se) %>% 
   as_tibble(rownames = "accession") %>% 
-  left_join(er_samples) %>% 
+  left_join(samples$ER) %>% 
   as("DataFrame")
 ```
 
@@ -569,19 +592,11 @@ For this section of the analysis, we'll use data for the histone mark H3K27ac fr
 A new sample metadata sheet can be formed using the following, and we'll immediately for the `BamFileList` for reading in counts.
 
 ```{r h3k-samples}
-h3k_samples <- tibble(
-  accession = paste0("SRR83151", seq(86, 91)),
-  target = "H3K27ac",
-  treatment = c(factor(rep(treat_levels, each = 3), levels = treat_levels))
-) %>% 
-  bind_rows(
-    tibble(accession = "SRR8315192", target = "Input")
-  )
-h3k_bfl <- file.path(
-  "data", "H3K27ac", paste0(h3k_samples$accession, ".bam")
-) %>% 
+acc <- c(samples$H3K27ac$accession, samples$H3K27ac$input) %>% 
+  unique()
+h3k_bfl <- file.path("data", "H3K27ac", paste0(acc, ".bam")) %>% 
   BamFileList() %>% 
-  setNames(h3k_samples$accession)
+  setNames(acc)
 ```
 
 ### Defining Windows
@@ -624,13 +639,13 @@ Again, this dataset is easily handled on a laptop, whilst for a complete genome,
 guide_ranges <- file.path("data", "H3K27ac", "H3K27ac_chr10.bed") %>% 
   import.bed(seqinfo = sq)
 filtcounts <- dualFilter(
-  x = wincounts[,dplyr::filter(h3k_samples, target == "H3K27ac")$accession],
-  bg  =  wincounts[,dplyr::filter(h3k_samples, target == "Input")$accession],
+  x = wincounts[, samples$H3K27ac$accession],
+  bg  =  wincounts[, unique(samples$H3K27ac$input)],
   ref = guide_ranges, q = 0.6
 )
 colData(filtcounts) <- colData(filtcounts) %>% 
   as_tibble(rownames = "accession") %>% 
-  left_join(h3k_samples) %>% 
+  left_join(samples$H3K27ac) %>% 
   as("DataFrame")
 dim(filtcounts)
 ```
@@ -730,7 +745,15 @@ Labels are only added to the sites in each combined group which are furthest fro
 plotPairwise(
   both_results, var = "logFC", colour = "status", label = "gene_name"
 ) +
-  scale_colour_brewer(palette = "Set1", direction = -1)
+  scale_colour_manual(
+    values = c("lightskyblue", "palevioletred", "grey", "darkred")
+  ) +
+  scale_fill_manual(
+    values = c(
+      setNames(status_colours, paste("ER", names(status_colours))),
+      setNames(status_colours, paste("H3K27ac", names(status_colours)))
+    )
+  )
 ```
 
 We can also compare columns by performing an operation somewhat analogous to `pivot_wider` where we find overlapping ranges and add columns from each element to a set of consensus peaks.
