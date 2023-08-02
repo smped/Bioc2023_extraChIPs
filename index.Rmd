@@ -30,6 +30,8 @@ knitr::opts_chunk$set(
 
 # Introduction
 
+**The talk accompanying this material can be found** [here](Bioc2023_presentation.html)
+
 ## Package Introduction
 
 `extraChIPs` was developed to provide key infrastructure for a larger ChIP-Seq workflow comparing binding dynamics across multiple ChIP targets.
@@ -45,7 +47,6 @@ Some functions may be analogous to those in existing packages, but the aim is to
 Previous work by the authors of DiffBind [@DiffBind2012] and csaw [@csaw2016] has been instrumental in the package design, along with the tidyverse [@tidyverse2019] and edgeR [@edgeRQLF2016].
 The intention of the package is to integrate easily with these packages, wrap multiple functions where appropriate, and provide new tools for both visualisation and working with results.
 
-**The talk accompanying this material can be found** [here](Bioc2023_presentation.html)
 
 ## Data and Workshop Setup
 

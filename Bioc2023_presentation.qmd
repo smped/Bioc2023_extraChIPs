@@ -28,6 +28,9 @@ knitr::opts_chunk$set(
 )
 ```
 
+##
+
+https://smped.github.io/Bioc2023_extraChIPs/
 
 # Introduction {background-color="#3c3c44"}
 

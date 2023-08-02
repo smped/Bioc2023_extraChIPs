@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2023-07-19" />
+<meta name="date" content="2023-08-02" />
 
 <title>Bioc2023: extraChIPs Package Demonstration</title>
 
@@ -201,11 +201,11 @@ function toggle_visibility(id1) {
 <p class="author-name">Stevie Pederson<span class="affil-mark">1,2,3*</span></p>
 <p class="author-affiliation"><span class="affil-mark">1</span>Black Ochre Data Laboratories, Telethon Kids Institute, Adelaide, Australia<br><span class="affil-mark">2</span>Dame Roma Mitchell Cancer Researc Laboratories, University of Adelaide<br><span class="affil-mark">3</span>John Curtin School of Medical Research, Australian National University</p>
 <p class="author-email"><span class="affil-mark">*</span><a href="mailto:stephen.pederson.au@gmail.com">stephen.pederson.au@gmail.com</a></p>
-<h4 class="date">19 July 2023</h4>
+<h4 class="date">2 August 2023</h4>
 <h4 class="abstract">Abstract</h4>
 <p>extraChIPs: Package Demo</p>
 <h4 class="package">Package</h4>
-<p>extraChIPs 1.5.8</p>
+<p>extraChIPs 1.5.9</p>
 
 </div>
 
@@ -257,6 +257,7 @@ function toggle_visibility(id1) {
 
 <div id="introduction" class="section level1" number="1">
 <h1><span class="header-section-number">1</span> Introduction</h1>
+<p><strong>The talk accompanying this material can be found</strong> <a href="Bioc2023_presentation.html">here</a></p>
 <div id="package-introduction" class="section level2" number="1.1">
 <h2><span class="header-section-number">1.1</span> Package Introduction</h2>
 <p><code>extraChIPs</code> was developed to provide key infrastructure for a larger ChIP-Seq workflow comparing binding dynamics across multiple ChIP targets.
@@ -271,7 +272,6 @@ The focus is on:</p>
 Some functions may be analogous to those in existing packages, but the aim is to be simple and intuitive to use, whilst simplifying high-performance analyses.
 Previous work by the authors of DiffBind <span class="citation">(<a href="#ref-DiffBind2012">Ross-Innes et al. 2012</a>)</span> and csaw <span class="citation">(<a href="#ref-csaw2016">Lun and Smyth 2016</a>)</span> has been instrumental in the package design, along with the tidyverse <span class="citation">(<a href="#ref-tidyverse2019">Wickham et al. 2019</a>)</span> and edgeR <span class="citation">(<a href="#ref-edgeRQLF2016">Chen, Lun, and Smyth 2016</a>)</span>.
 The intention of the package is to integrate easily with these packages, wrap multiple functions where appropriate, and provide new tools for both visualisation and working with results.</p>
-<p><strong>The talk accompanying this material can be found</strong> <a href="Bioc2023_presentation.html">here</a></p>
 </div>
 <div id="data-and-workshop-setup" class="section level2" number="1.2">
 <h2><span class="header-section-number">1.2</span> Data and Workshop Setup</h2>
@@ -1540,15 +1540,15 @@ Zhang, Yong, Tao Liu, Clifford A Meyer, Jérôme Eeckhoute, David S Johnson, Bra
 ## 
 ## other attached packages:
 ##  [1] patchwork_1.1.2             rtracklayer_1.60.0         
-##  [3] edgeR_3.42.4                limma_3.56.1               
+##  [3] edgeR_3.42.4                limma_3.56.2               
 ##  [5] csaw_1.34.0                 Rsamtools_2.16.0           
 ##  [7] Biostrings_2.68.1           XVector_0.40.0             
-##  [9] extraChIPs_1.5.8            SummarizedExperiment_1.30.1
-## [11] Biobase_2.60.0              MatrixGenerics_1.12.0      
+##  [9] extraChIPs_1.5.9            SummarizedExperiment_1.30.2
+## [11] Biobase_2.60.0              MatrixGenerics_1.12.2      
 ## [13] matrixStats_1.0.0           ggside_0.2.2               
 ## [15] BiocParallel_1.34.2         plyranges_1.20.0           
-## [17] GenomicRanges_1.52.0        GenomeInfoDb_1.36.0        
-## [19] IRanges_2.34.0              S4Vectors_0.38.1           
+## [17] GenomicRanges_1.52.0        GenomeInfoDb_1.36.1        
+## [19] IRanges_2.34.1              S4Vectors_0.38.1           
 ## [21] BiocGenerics_0.46.0         glue_1.6.2                 
 ## [23] lubridate_1.9.2             forcats_1.0.0              
 ## [25] stringr_1.5.0               dplyr_1.1.2                
@@ -1565,68 +1565,68 @@ Zhang, Yong, Tao Liu, Clifford A Meyer, Jérôme Eeckhoute, David S Johnson, Bra
 ##   [9] doParallel_1.0.17          lattice_0.21-8            
 ##  [11] ensembldb_2.24.0           MASS_7.3-60               
 ##  [13] backports_1.4.1            magrittr_2.0.3            
-##  [15] Hmisc_5.1-0                sass_0.4.6                
-##  [17] rmarkdown_2.22             jquerylib_0.1.4           
+##  [15] Hmisc_5.1-0                sass_0.4.7                
+##  [17] rmarkdown_2.23             jquerylib_0.1.4           
 ##  [19] yaml_2.3.7                 metapod_1.8.0             
 ##  [21] Gviz_1.44.0                DBI_1.1.3                 
-##  [23] RColorBrewer_1.1-3         zlibbioc_1.46.0           
-##  [25] AnnotationFilter_1.24.0    biovizBase_1.48.0         
-##  [27] RCurl_1.98-1.12            nnet_7.3-19               
-##  [29] tweenr_2.0.2               VariantAnnotation_1.46.0  
-##  [31] rappdirs_0.3.3             circlize_0.4.15           
-##  [33] GenomeInfoDbData_1.2.10    ggrepel_0.9.3             
-##  [35] codetools_0.2-19           DelayedArray_0.26.3       
-##  [37] xml2_1.3.4                 ggforce_0.4.1             
-##  [39] tidyselect_1.2.0           shape_1.4.6               
-##  [41] futile.logger_1.4.3        farver_2.1.1              
-##  [43] ComplexUpset_1.3.3         BiocFileCache_2.8.0       
-##  [45] base64enc_0.1-3            GenomicAlignments_1.36.0  
-##  [47] jsonlite_1.8.4             GetoptLong_1.0.5          
-##  [49] Formula_1.2-5              iterators_1.0.14          
-##  [51] foreach_1.5.2              tools_4.3.1               
-##  [53] progress_1.2.2             Rcpp_1.0.10               
-##  [55] gridExtra_2.3              mgcv_1.8-42               
-##  [57] xfun_0.39                  withr_2.5.0               
-##  [59] formatR_1.14               BiocManager_1.30.20       
-##  [61] fastmap_1.1.1              latticeExtra_0.6-30       
-##  [63] fansi_1.0.4                digest_0.6.31             
-##  [65] timechange_0.2.0           R6_2.5.1                  
-##  [67] colorspace_2.1-0           jpeg_0.1-10               
-##  [69] dichromat_2.0-0.1          biomaRt_2.56.0            
-##  [71] RSQLite_2.3.1              utf8_1.2.3                
-##  [73] generics_0.1.3             data.table_1.14.8         
-##  [75] prettyunits_1.1.1          InteractionSet_1.28.0     
-##  [77] httr_1.4.6                 htmlwidgets_1.6.2         
-##  [79] S4Arrays_1.0.4             pkgconfig_2.0.3           
-##  [81] gtable_0.3.3               blob_1.2.4                
-##  [83] ComplexHeatmap_2.16.0      htmltools_0.5.5           
-##  [85] bookdown_0.34              ProtGenerics_1.32.0       
-##  [87] clue_0.3-64                scales_1.2.1              
-##  [89] png_0.1-8                  knitr_1.43                
-##  [91] lambda.r_1.2.4             rstudioapi_0.14           
-##  [93] tzdb_0.4.0                 rjson_0.2.21              
-##  [95] nlme_3.1-162               checkmate_2.2.0           
-##  [97] curl_5.0.0                 cachem_1.0.8              
-##  [99] GlobalOptions_0.1.2        parallel_4.3.1            
-## [101] foreign_0.8-84             AnnotationDbi_1.62.1      
-## [103] restfulr_0.0.15            pillar_1.9.0              
-## [105] grid_4.3.1                 vctrs_0.6.2               
-## [107] dbplyr_2.3.2               cluster_2.1.4             
-## [109] htmlTable_2.4.1            evaluate_0.21             
-## [111] VennDiagram_1.7.3          EnrichedHeatmap_1.30.0    
-## [113] GenomicFeatures_1.52.0     cli_3.6.1                 
-## [115] locfit_1.5-9.7             compiler_4.3.1            
-## [117] futile.options_1.0.1       rlang_1.1.1               
-## [119] crayon_1.5.2               labeling_0.4.2            
-## [121] interp_1.1-4               stringi_1.7.12            
-## [123] deldir_1.0-9               munsell_0.5.0             
-## [125] lazyeval_0.2.2             Matrix_1.5-4.1            
-## [127] BSgenome_1.68.0            hms_1.1.3                 
-## [129] bit64_4.0.5                KEGGREST_1.40.0           
-## [131] highr_0.10                 igraph_1.4.3              
-## [133] broom_1.0.4                memoise_2.0.1             
-## [135] bslib_0.4.2                bit_4.0.5                 
-## [137] GenomicInteractions_1.34.0</code></pre>
+##  [23] RColorBrewer_1.1-3         abind_1.4-5               
+##  [25] zlibbioc_1.46.0            AnnotationFilter_1.24.0   
+##  [27] biovizBase_1.48.0          RCurl_1.98-1.12           
+##  [29] nnet_7.3-19                tweenr_2.0.2              
+##  [31] VariantAnnotation_1.46.0   rappdirs_0.3.3            
+##  [33] circlize_0.4.15            GenomeInfoDbData_1.2.10   
+##  [35] ggrepel_0.9.3              codetools_0.2-19          
+##  [37] DelayedArray_0.26.6        xml2_1.3.5                
+##  [39] ggforce_0.4.1              tidyselect_1.2.0          
+##  [41] shape_1.4.6                futile.logger_1.4.3       
+##  [43] farver_2.1.1               ComplexUpset_1.3.3        
+##  [45] BiocFileCache_2.8.0        base64enc_0.1-3           
+##  [47] GenomicAlignments_1.36.0   jsonlite_1.8.7            
+##  [49] GetoptLong_1.0.5           Formula_1.2-5             
+##  [51] iterators_1.0.14           foreach_1.5.2             
+##  [53] tools_4.3.1                progress_1.2.2            
+##  [55] Rcpp_1.0.11                gridExtra_2.3             
+##  [57] mgcv_1.8-42                xfun_0.39                 
+##  [59] withr_2.5.0                formatR_1.14              
+##  [61] BiocManager_1.30.21.1      fastmap_1.1.1             
+##  [63] latticeExtra_0.6-30        fansi_1.0.4               
+##  [65] digest_0.6.33              timechange_0.2.0          
+##  [67] R6_2.5.1                   colorspace_2.1-0          
+##  [69] jpeg_0.1-10                dichromat_2.0-0.1         
+##  [71] biomaRt_2.56.1             RSQLite_2.3.1             
+##  [73] utf8_1.2.3                 generics_0.1.3            
+##  [75] data.table_1.14.8          prettyunits_1.1.1         
+##  [77] InteractionSet_1.28.1      httr_1.4.6                
+##  [79] htmlwidgets_1.6.2          S4Arrays_1.0.5            
+##  [81] pkgconfig_2.0.3            gtable_0.3.3              
+##  [83] blob_1.2.4                 ComplexHeatmap_2.16.0     
+##  [85] htmltools_0.5.5            bookdown_0.34             
+##  [87] ProtGenerics_1.32.0        clue_0.3-64               
+##  [89] scales_1.2.1               png_0.1-8                 
+##  [91] knitr_1.43                 lambda.r_1.2.4            
+##  [93] rstudioapi_0.15.0          tzdb_0.4.0                
+##  [95] rjson_0.2.21               nlme_3.1-162              
+##  [97] checkmate_2.2.0            curl_5.0.1                
+##  [99] cachem_1.0.8               GlobalOptions_0.1.2       
+## [101] parallel_4.3.1             foreign_0.8-84            
+## [103] AnnotationDbi_1.62.2       restfulr_0.0.15           
+## [105] pillar_1.9.0               grid_4.3.1                
+## [107] vctrs_0.6.3                dbplyr_2.3.3              
+## [109] cluster_2.1.4              htmlTable_2.4.1           
+## [111] evaluate_0.21              VennDiagram_1.7.3         
+## [113] EnrichedHeatmap_1.30.0     GenomicFeatures_1.52.1    
+## [115] cli_3.6.1                  locfit_1.5-9.8            
+## [117] compiler_4.3.1             futile.options_1.0.1      
+## [119] rlang_1.1.1                crayon_1.5.2              
+## [121] labeling_0.4.2             interp_1.1-4              
+## [123] stringi_1.7.12             deldir_1.0-9              
+## [125] munsell_0.5.0              lazyeval_0.2.2            
+## [127] Matrix_1.6-0               BSgenome_1.68.0           
+## [129] hms_1.1.3                  bit64_4.0.5               
+## [131] KEGGREST_1.40.0            highr_0.10                
+## [133] igraph_1.5.0.1             broom_1.0.5               
+## [135] memoise_2.0.1              bslib_0.5.0               
+## [137] bit_4.0.5                  GenomicInteractions_1.34.0</code></pre>
 </div>
 
 
